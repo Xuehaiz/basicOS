@@ -33,7 +33,7 @@ int main(int argc, char const *argv[]) {
 		/* Print >>> then get the input string */
 		//printf(">>> ");
 		getline(&text, &len, fp);
-		text[strlen(text) - 1] = '\0';
+		//text[strlen(text) - 1] = '\0';
 		//if (strlen(text) > 0) printf("\n");
 		/* If the user entered <exit> then exit the loop */
 		if (strcmp(text, exit) == 0) break;
@@ -51,6 +51,7 @@ int main(int argc, char const *argv[]) {
 		}
 	}
 	/*Free the allocated memory*/
+	fclose(fp);
 	free(input);
 	free(text);
 
