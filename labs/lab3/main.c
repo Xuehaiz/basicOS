@@ -38,7 +38,6 @@ int main(int argc, char const *argv[])
 	setbuf(stdout, NULL);
 	// Variable declarations
 	FILE *fp = stdin;
-	//int fd;
 	int counter = 0;
 	int condition = 1;
 	char *line_cp = NULL;
@@ -61,7 +60,7 @@ int main(int argc, char const *argv[])
 
 	if (argc == 3 && strcmp(argv[1],"-f") == 0) {
 		fp = fopen(argv[2], "r");
-		if (fp < 0) {
+		if (fp == NULL) {
               fprintf(stderr, "File <%s> create failure.\n", argv[2]);
               exit(EXIT_FAILURE);
         }

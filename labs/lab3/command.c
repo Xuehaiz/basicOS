@@ -14,7 +14,7 @@ void lfcat()
 	// Define your variables here
 	FILE *fp;
 	DIR *dir;
-	//int fnamelen;
+	// int fd;
 	size_t len = 1024;
 	char *currDir;
 	static char *buffer;
@@ -74,6 +74,8 @@ void lfcat()
 	}
 	// free memory 
 	free(line);
+	free(currDir);
+	free(sd);
 
 	// close the read file and free/null assign your line buffer
 	fclose(fp);
