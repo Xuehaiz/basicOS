@@ -65,8 +65,9 @@ int main(int argc, char const *argv[])
               exit(EXIT_FAILURE);
         }
         freopen("output.txt", "w", stdout);
-	} else if (argc != 1) {
-		fprintf(stderr, "usage: Interactive mode: ./lab3.exe\n File mode./lab3.exe -f output.txt\n");
+	} 
+	else if (argc != 1) {
+		fprintf(stderr, "usage: Interactive mode: ./lab3.exe\n File mode: ./lab3.exe -f output.txt\n");
 		exit(EXIT_FAILURE);
 	}
 

@@ -23,8 +23,8 @@ void lfcat()
 	// memory allcation
 	char *line = (char *)malloc(len * sizeof(char));
 	if (line == NULL) {
-		fprintf(stderr, "line allocation failure\n");
-		exit(1);
+		write(1, "line allocation failure\n", strlen("line allocation failure\n"));
+		exit(EXIT_FAILURE);
 	}
 
 	// Get the current directory
@@ -34,15 +34,18 @@ void lfcat()
 	// Open the dir using opendir()
 	dir = opendir(currDir);
 	if (dir == NULL) {
-        fprintf(stderr, "Error! Unable to open current directory.\n");
+        write(1, "Error! Unable to open current directory.\n", strlen("Error! Unable to open current directory.\n"));
         exit(EXIT_FAILURE);
     }
 
 	// use a while loop to read the dir
 	while ((sd=readdir(dir)) != NULL) {
+<<<<<<< HEAD
 		/*if (strcmp(sd->d_name, ".") != 0 && strcmp(sd->d_name, "..") != 0) {
 			printf("%s\n", sd->d_name);
 		}*/
+=======
+>>>>>>> 58daa40b065093c58dbeb91b259adfb3bcb2f460
 		// Hint: use an if statement to skip any names that are not readable files (e.g. ".", "..", "main.c", "a.out", "output.txt"
 		if (sd->d_type == DT_REG
 			&& strstr(sd->d_name, ".c") == NULL
@@ -68,7 +71,7 @@ void lfcat()
 			write(1, "\n", 1);
 			// write 80 "-" characters to stdout
 			for (int i = 0; i < 80; ++i) {
-				printf("-");
+				write(1, "-", 1);
 			}
 			write(1, "\n", 1);
 			fclose(fp);
