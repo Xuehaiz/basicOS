@@ -1,147 +1,172 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <string.h>
 #include <sys/types.h>
 
 #include "command.h"
 
 
+void error_handler(char **wrd_in_token) {
+	if (strcmp(wrd_in_token[0], wrd_in_token[1]) == 0) {
+		fprintf(stderr, "Error! Incorrect syntax. No control code found.\n");
+	}
+	else {
+		fprintf(stderr, "Error! Unsupported parameters for command: %s\n", wrd_in_token[0]);
+	}
+}
+
+
 int main(int argc, char const *argv[])
 {
 	/* Main Function Variables */
 	FILE *fp;
-	
-	
-	int i;
-
-	char *line;  // stores each line's value
+	FILE *fout;
+	int counter = 0;
+	int condition = 1;
 	char *line_cp = NULL;
-	size_t len = 0; 
+	size_t len = 256; 
 	char *token = NULL;
 	char *token_cp = NULL;
-	char *cmd_in_line = NULL;
-	char *command = NULL;
-	char *arg1 = NULL;
-	char *arg2 = NULL;
-
-	/* read file */
-	if (argv[1] != NULL) {
-		fp = fopen(argv[1], "r");
+	char *wrd;
+	
+	// memory allcation
+	char *line = (char *)malloc(len * sizeof(char));
+	if (line == NULL) {
+		fprintf(stderr, "line allocation failure\n");
+		exit(1);
 	}
-	else {
-		fp = stdin;
+	char **wrd_in_token = (char **)malloc(len * sizeof(char *));
+	if (wrd_in_token == NULL) {
+		fprintf(stderr, "Buffer allocation failure\n");
+		exit(1);
 	}
 
-	/*main run loop*/
 
-	while (1) {
-		printf(">>> ");
-		getline(&line, &len, fp);
-		line[strlen(line) - 1] = '\0';
-		// handle if line starts with a ;
-		if (line[0] == ';') {
-			printf("Error! Unrecognized command: %s\n", command);
-			line++;
-		}
-		printf("%s\n", line);
+	if (argc == 3 && strcmp(argv[1],"-f") == 0) {
+		fp = fopen(argv[2], "r");
+		if (fp == NULL) {
+              fprintf(stderr, "Error! File <%s> does not exist.\n", argv[2]);
+              exit(EXIT_FAILURE);
+        }
+	}
+	
+	if (argc == 1) {
+		while (condition) {
+			printf(">>> ");
+			getline(&line, &len, stdin);
+			line[strlen(line) - 1] = '\0';
 
-		if (strcmp(line, "exit") == 0) break;
-		else {
-			i = 0;
-			line_cp = line;
-			
-			// tokenize by ;
-			token = strtok_r(line_cp, ";", &line_cp);
-			token_cp = token;
-			
-			// for each sun-token tokenize by space
-			cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-
-			// since the first word is the command
-			command = cmd_in_line;
-
-			while (token != NULL) {
-				
-				if (strcmp(command, "ls") == 0) {
-					printf("here?\n");
-					if (strlen(token_cp) > 0) {
-						arg1 = strtok_r(token_cp, " ", &token_cp);
-						// check repeat command
-						if (strcmp(arg1, "ls") == 0) {
-							printf("Error! Incorrect syntax, No control code found\n");
+			if (strcmp(line, "exit") == 0) break;
+			else {
+				line_cp = line;
+				// split the line by ; 
+				while ((token = strtok_r(line_cp, ";", &line_cp))) {
+					counter = 0;
+					if (strcmp(token, "") == 0) {
+						fprintf(stderr, "Error! Unrecognized command: %s\n", wrd_in_token[0]);
+						break;
+					}
+					token_cp = token;
+					// split each token and save them into another buffer (wrd_in_token)
+					while((wrd = strtok_r(token_cp, " ", &token_cp))) {
+						if (strcmp(wrd, "") == 0) {
+							fprintf(stderr, "Error! Unrecognized command: %s\n", wrd_in_token[0]);
+							break;
 						}
-						// check unvalid argument
-						else {
-							if (arg1 != NULL)
-							printf("Error! Unsupported parameters for command: %s\n", command);
+						wrd_in_token[counter] = wrd;
+						counter++;
+					}
+					if (strcmp(wrd_in_token[0], "ls") == 0) {
+						if (counter - 1 != 0) {
+							error_handler(wrd_in_token);
+							break;
 						}
-					} 
-					listDir();
-				}
-				else if (strcmp(command, "pwd") == 0) {
-					if (strlen(token_cp) > 0) {
-						arg1 = strtok_r(token_cp, " ", &token_cp);
-						if (strcmp(arg1, "pwd") == 0) {
-							printf("Error! Incorrect syntax, No control code found\n");
+						listDir();
+					}
+					else if (strcmp(wrd_in_token[0], "pwd") == 0) {
+						if (counter - 1 != 0) {
+							error_handler(wrd_in_token);
+							break;
 						}
-						else {
-							if (arg1 != NULL)
-							printf("Error! Unsupported parameters for command: %s\n", command);
+						showCurrentDir();
+					}
+					else if (strcmp(wrd_in_token[0], "mkdir") == 0) {
+						if (counter - 2 == 0) {
+							makeDir(wrd_in_token[1]); 
+						} else if (counter - 1 == 0){
+							fprintf(stderr, "Error! usage: mkdir directory ...\n");
+							break;
+						} else {
+							error_handler(wrd_in_token);
+							break;
+						}
+						
+					}
+					else if (strcmp(wrd_in_token[0], "cd") == 0) {
+						if (counter - 1 == 0) {
+							changeDir(NULL);
+						} else if (counter - 2 == 0){
+							changeDir(wrd_in_token[1]);
+						} else {
+							error_handler(wrd_in_token);
+							break;
 						}
 					}
-					if (strtok_r(token_cp, " ", &token_cp) != NULL) {
-						printf("Error! Unsupported parameters for command: %s\n", command);
+					else if (strcmp(wrd_in_token[0], "cp") == 0) {
+						if (counter - 1 == 0) {
+							fprintf(stderr, "Error! usage: cp source_file target_file\n");
+							break;
+						} else if (counter - 3 == 0) {
+							copyFile(wrd_in_token[1], wrd_in_token[2]);
+						} else {
+							error_handler(wrd_in_token);
+							break;
+						}
 					}
-					showCurrentDir();
-				}
-				else if (strcmp(command, "mkdir") == 0) {
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg1 = cmd_in_line;
-					makeDir(arg1); 
-				}
-				else if (strcmp(command, "cd") == 0) {
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg1 = cmd_in_line;
-					changeDir(arg1);
-				}
-				else if (strcmp(command, "cp") == 0) {
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg1 = cmd_in_line;
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg2 = cmd_in_line;
-					copyFile(arg1, arg2);
-				}
-				else if (strcmp(command, "mv") == 0) {
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg1 = cmd_in_line;
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg2 = cmd_in_line;
-					moveFile(arg1, arg2);
-				}
-				else if (strcmp(command, "rm") == 0) {
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg1 = cmd_in_line;
-					deleteFile(arg1);
-				}
-				else if (strcmp(command, "cat") == 0) {
-					cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-					arg1 = cmd_in_line;
-					displayFile(arg1);
-				}
-				else {
-					printf("Error! Unrecognized command: %s\n", command);
-				}
-				if (line_cp != NULL) {
-					token = strtok_r(line_cp, ";", &line_cp);
-				}
-				token_cp = token;
-				cmd_in_line = strtok_r(token_cp, " ", &token_cp);
-				if (cmd_in_line != NULL) {
-					command = cmd_in_line;
+					else if (strcmp(wrd_in_token[0], "mv") == 0) {
+						if (counter - 1 == 0) {
+							fprintf(stderr, "Error! usage: mv source_file target_file\n");
+							break;
+						} else if (counter - 3 == 0) {
+							moveFile(wrd_in_token[1], wrd_in_token[2]);
+						} else {
+							error_handler(wrd_in_token);
+							break;
+						}
+					}
+					else if (strcmp(wrd_in_token[0], "rm") == 0) {
+						if (counter - 2 != 0) {
+							error_handler(wrd_in_token);
+							break;
+						}
+						deleteFile(wrd_in_token[1]);
+					}
+					else if (strcmp(wrd_in_token[0], "cat") == 0) {
+						if (counter - 1 == 0) {
+							displayFile(NULL);
+						}
+						else if (counter - 2 == 0) {
+							displayFile(wrd_in_token[1]);
+						} 
+						else {
+							error_handler(wrd_in_token);
+							break;
+						}
+					}
+					else {
+						printf("Error! Unrecognized command: %s\n", wrd_in_token[0]);
+						break;
+					}
 				}
 			}
 		}
 	}
+	
+	// free memory and close file 
+	free(line);
+	free(wrd_in_token);
+
 	return 0;
 }

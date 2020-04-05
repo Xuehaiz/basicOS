@@ -68,10 +68,6 @@ void changeDir(char *dirName) {
 
 /*for the cp command*/
 void copyFile(char *sourcePath, char *destinationPath) {
-
-} 
-
-void moveFile(char *sourcePath, char *destinationPath) {
 	FILE *f1, *f2;
 	char line[BUFSIZ];
 	f1 = fopen(sourcePath, "r");
@@ -93,36 +89,16 @@ void moveFile(char *sourcePath, char *destinationPath) {
 	}
 	fclose(f1);
 	fclose(f2);
+} 
+
+void moveFile(char *sourcePath, char *destinationPath) {
+
 } /*for the mv command*/
 
 void deleteFile(char *filename) {
-	if (filename != NULL) {
 
-	}
 } /*for the rm command*/
 
-
-/*for the cat command*/
 void displayFile(char *filename) {
-	char line[BUFSIZ];
-	if (filename != NULL) {
-		FILE *fp = fopen(filename, "r");
-		if (fp == NULL) {
-			fprintf(stderr, "File open failure\n");
-		}
-		while (fgets(line, BUFSIZ, fp) != NULL) {
-			fputs(line, stdout);
-		}
-		printf("\n");
-	}
-	else {
-		while(1) {
-			scanf("%s", line);
-			fputs(line, stdout);
-			printf("\n");
-		}
-	}
-} 
 
-
-
+} /*for the cat command*/
