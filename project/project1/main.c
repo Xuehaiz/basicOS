@@ -23,7 +23,6 @@ int main(int argc, char const *argv[])
 	/* Main Function Variables */
 	FILE *fp = stdin;
 	int counter = 0;
-	int condition = 1;
 	char *line_cp = NULL;
 	size_t len = 256; 
 	char *token = NULL;
