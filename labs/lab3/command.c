@@ -40,12 +40,6 @@ void lfcat()
 
 	// use a while loop to read the dir
 	while ((sd=readdir(dir)) != NULL) {
-<<<<<<< HEAD
-		/*if (strcmp(sd->d_name, ".") != 0 && strcmp(sd->d_name, "..") != 0) {
-			printf("%s\n", sd->d_name);
-		}*/
-=======
->>>>>>> 58daa40b065093c58dbeb91b259adfb3bcb2f460
 		// Hint: use an if statement to skip any names that are not readable files (e.g. ".", "..", "main.c", "a.out", "output.txt"
 		if (sd->d_type == DT_REG
 			&& strstr(sd->d_name, ".c") == NULL
