@@ -1,0 +1,33 @@
+/Users/zhxh/CIS415/cis-415/project/project1
+/Users/zhxh/CIS415/cis-415/project/project1/test
+/Users/zhxh/CIS415/cis-415/project/project1
+/Users/zhxh/CIS415/cis-415/project/project1/test
+/Users/zhxh/CIS415/cis-415/project/project1/test
+input.txt
+pwd ; mkdir test ; cd test
+cd .. ; cd test ; pwd
+cp ../input.txt . ; ls ; cat input.txt
+mv input.txt del.txt ; pwd ; ls
+rm del.txt ; ls
+cd .. ; pwd
+ls
+/Users/zhxh/CIS415/cis-415/project/project1/test
+del.txt
+/Users/zhxh/CIS415/cis-415/project/project1
+/Users/zhxh/CIS415/cis-415/project/project1
+main.o
+test
+Makefile
+command.c
+project1
+Project 1 - Description.pdf
+pseudu-shell
+Report_Collection_Template.pdf
+input.txt
+main.c
+Report_Collection_Template.docx
+command.h
+command.o
+project1.zip
+a_file
+output.txt

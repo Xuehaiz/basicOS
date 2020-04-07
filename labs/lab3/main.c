@@ -119,6 +119,8 @@ int main(int argc, char const *argv[])
 	free(wrd_in_token);
 	fclose(fp);
 
+	fclose(fp);
+
 	return 0;
 }
 
