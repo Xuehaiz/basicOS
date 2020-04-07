@@ -27,11 +27,16 @@ void listDir() {
 
 /*for the pwd command*/
 void showCurrentDir() {
-	char* currDir;
-	static char* buffer;
-	currDir = getcwd(buffer, 1024);
+	char* currDir = NULL;
+	char *buffer = (char *)malloc(256 * sizeof(char));
+	currDir = getcwd(buffer, 256);
+	if (currDir == NULL) {
+		perror("Error! Cannot show current directory");
+		return;
+	}
 	write(1, currDir, strlen(currDir));
 	write(1, "\n", 1);
+	free(buffer);
 }
 
 /*for the mkdir command*/
@@ -55,7 +60,6 @@ void makeDir(char *dirName) {
 
 /*for the cd command*/
 void changeDir(char *dirName) {
-	static char* buffer;
 	// If we write no path (only 'cd'), then go to the home directory
 	if (dirName == NULL) {
 		chdir(getenv("HOME")); 
@@ -66,9 +70,6 @@ void changeDir(char *dirName) {
 		if (chdir(dirName) == -1) {
 			perror("Error: no such directory exist\n");
 			return;
-		} else {
-			write(1, getcwd(buffer, 1024), strlen(getcwd(buffer, 1024)));
-			write(1, "\n", 1);
 		}
 	}
 }
