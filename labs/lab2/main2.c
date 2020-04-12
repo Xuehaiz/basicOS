@@ -51,6 +51,7 @@ int main(int argc, char const *argv[]) {
 		}
 	}
 	/*Free the allocated memory*/
+	fclose(fp);
 	free(input);
 	free(text);
 
