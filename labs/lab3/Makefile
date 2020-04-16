@@ -3,7 +3,7 @@ cc = gcc
 sources = $(wildcard *.c)
 objects = $(addsuffix .o, $(basename $(sources)))
 
-flags = -g -W -Wall -std=gnu99 
+flags = -g -W -Wall -std=gnu99
 
 target = lab3.exe
 

@@ -19,7 +19,6 @@ int main(int argc, char const *argv[]) {
 	setbuf(stdout, NULL);
 	/* Main Function Variables */
 	FILE *fp = fopen(argv[1], "r");
-	FILE *writeback = fopen(argv[2], "w");
 	char *text = NULL;
 	char *text_cp = NULL;
 	size_t len = 0; 
@@ -30,10 +29,10 @@ int main(int argc, char const *argv[]) {
 	char* input = (char*)malloc(sizeof(char)*BUFSIZ);
 	
 	/*main run loop*/
-	while (getline(&text, &len, fp) != -1) { 
+	while (token != NULL) { 
 		/* Print >>> then get the input string */
 		//printf(">>> ");
-		
+		getline(&text, &len, fp);
 		//text[strlen(text) - 1] = '\0';
 		//if (strlen(text) > 0) printf("\n");
 		/* If the user entered <exit> then exit the loop */
@@ -45,15 +44,13 @@ int main(int argc, char const *argv[]) {
 			token = strtok_r(text_cp, " ", &text_cp);
 			/* Display each token */
 			while (token != NULL) {
-				fprintf(writeback, "T%d: %s\n", i, token);
+				printf("T%d: %s\n", i, token);
 				i++;
 				token = strtok_r(NULL, " ", &text_cp);
 			}
 		}
 	}
 	/*Free the allocated memory*/
-	fclose(fp);
-	fclose(writeback);
 	free(input);
 	free(text);
 
