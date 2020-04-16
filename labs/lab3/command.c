@@ -40,11 +40,12 @@ void lfcat()
 
 	// use a while loop to read the dir
 	while ((sd=readdir(dir)) != NULL) {
-		if (strcmp(sd->d_name, ".") != 0 && strcmp(sd->d_name, "..") != 0) {
-			printf("%s\n", sd->d_name);
-		}
+		// if (strcmp(sd->d_name, ".") != 0 && strcmp(sd->d_name, "..") != 0) {
+		// 	printf("%s\n", sd->d_name);
+		// }
 		// Hint: use an if statement to skip any names that are not readable files (e.g. ".", "..", "main.c", "a.out", "output.txt"
-		if (strstr(sd->d_name, ".c") == NULL
+		if (sd->d_type == DT_REG
+			&& strstr(sd->d_name, ".c") == NULL
             && strstr(sd->d_name, ".o") == NULL
             && strstr(sd->d_name, ".h") == NULL
             && strstr(sd->d_name, ".pdf") == NULL
@@ -70,13 +71,15 @@ void lfcat()
 				printf("-");
 			}
 			write(1, "\n", 1);
+			fclose(fp);
 		}
 	}
 	// free memory 
 	free(line);
+	free(currDir);
 
 	// close the read file and free/null assign your line buffer
-	fclose(fp);
+	
 
 	//close the directory you were reading from using closedir()
 	closedir(dir);
