@@ -118,6 +118,8 @@ int main(int argc, char const *argv[])
 	free(line);
 	free(wrd_in_token);
 
+	fclose(fp);
+
 	return 0;
 }
 
