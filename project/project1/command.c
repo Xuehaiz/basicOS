@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,10 +15,14 @@ void listDir() {
 	struct dirent *sd;
 	dir = opendir(".");
 	while ((sd=readdir(dir)) != NULL) {
-		if (!(strcmp(sd->d_name, ".") == 0) && !(strcmp(sd->d_name, "..") == 0)) {
-			printf("%s\n",sd->d_name);
+		if (strcmp(sd->d_name, ".") 
+		&& strcmp(sd->d_name, "..")
+		&& strcmp(sd->d_name, ".DS_Store")) {
+			write(1, sd->d_name, strlen(sd->d_name));
+			write(1, "\n", 1);
 		}
 	}
+	closedir(dir);
 } 
 
 /*for the pwd command*/
@@ -25,27 +30,28 @@ void showCurrentDir() {
 	char* currDir;
 	static char* buffer;
 	currDir = getcwd(buffer, 1024);
-	printf("%s\n", currDir);
+	write(1, currDir, strlen(currDir));
+	write(1, "\n", 1);
 }
 
+/*for the mkdir command*/
 void makeDir(char *dirName) {
 	DIR *dir;
 	int stat;
 	dir = opendir(dirName);
 	if (dir) {
-		fprintf(stderr, "Directory already exist\n");
+		perror("Directory already exist\n");
+		closedir(dir);
 		return;
 	}
 	else {
 		// give all permissions
 		stat = mkdir(dirName, 0777);
 		if (stat == -1) {
-			printf("mkdir failure\n");
+			perror("mkdir failure\n");
 		}
 	}
-	
-} /*for the mkdir command*/
-
+} 
 
 /*for the cd command*/
 void changeDir(char *dirName) {
@@ -58,70 +64,107 @@ void changeDir(char *dirName) {
 	// argument, if possible
 	else { 
 		if (chdir(dirName) == -1) {
-			fprintf(stderr, "%s: no such directory\n", dirName);
+			perror("Error: no such directory exist\n");
 			return;
 		} else {
-			printf("%s\n", getcwd(buffer, 1024));
+			write(1, getcwd(buffer, 1024), strlen(getcwd(buffer, 1024)));
+			write(1, "\n", 1);
 		}
 	}
 }
 
-/*for the cp command*/
-void copyFile(char *sourcePath, char *destinationPath) {
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
 
+/*for the cp command*/
+void copyFile(char *sourcePath, char *destinationPath)
+{
+    int src;
+    int dst;
+    int nread;
+    char buf[1];
+    DIR *dst_dir;
+    char *filename;
+    char *destinationfile = (char *)malloc(32 * sizeof(char));
+    strcpy(destinationfile, destinationPath);
+    
+    src = open(sourcePath, O_RDONLY);
+    if (src < 0) {
+        perror("Source file open failure");
+        return;
+    }
+
+    dst_dir = opendir(destinationPath);
+    if (dst_dir) {
+        if (strstr(sourcePath, "/") != NULL) {
+            filename = strrchr(sourcePath, '/');
+            strcat(destinationfile, filename);
+        }
+        else {
+            filename = sourcePath;
+            if (strstr(destinationPath, "/") == NULL)
+                strcat(destinationfile, "/");
+            strcat(destinationfile, filename);
+        }
+        closedir(dst_dir);
+    }
+    dst = open(destinationfile, O_WRONLY | O_CREAT, 0700);
+
+    if (dst < 0) {
+        perror("Destination file create failure");
+        return;
+    }
+	
+    while((nread = read(src, buf, 1)) > 0) {
+        write(dst, buf, 1);
+    }
+
+    free(destinationfile);
+    close(src);
+    close(dst);    
+}
+
+/*for the mv command*/
+void moveFile(char *sourcePath, char *destinationPath) {
+	copyFile(sourcePath, destinationPath);
+	deleteFile(sourcePath);
 } 
 
-void moveFile(char *sourcePath, char *destinationPath) {
-	FILE *f1, *f2;
-	char line[BUFSIZ];
-	f1 = fopen(sourcePath, "r");
-	if (f1 == NULL) {
-		fprintf(stderr, "Source path open failure\n");
-		return;
-	}
-	f2 = fopen(destinationPath, "r");
-	if (f2 == NULL) {
-		f2 = fopen(destinationPath, "w+");
-	}
-	if (f2 == NULL) {
-		fprintf(stderr, "Destination path create failure\n");
-		fclose(f1);
-		return;
-	}
-	while (fgets(line, BUFSIZ, f1) != NULL) {
-		fputs(line, f2);
-	}
-	fclose(f1);
-	fclose(f2);
-} /*for the mv command*/
-
+/*for the rm command*/
 void deleteFile(char *filename) {
-	if (filename != NULL) {
+	int src;
 
+	src = open(filename, O_RDONLY);
+	if (src == -1) {
+		perror("Error");
+		return;
+	} 
+	else {
+		close(src);
+		remove(filename);
 	}
-} /*for the rm command*/
+} 
 
 
 /*for the cat command*/
 void displayFile(char *filename) {
-	char line[BUFSIZ];
-	if (filename != NULL) {
-		FILE *fp = fopen(filename, "r");
-		if (fp == NULL) {
-			fprintf(stderr, "File open failure\n");
-		}
-		while (fgets(line, BUFSIZ, fp) != NULL) {
-			fputs(line, stdout);
-		}
-		printf("\n");
+	int src;
+	int nread;
+	char buf[1];
+	src = open(filename, O_RDONLY);
+	if (src == -1) {
+		perror("File open failure\n");
+		return;
 	}
-	else {
-		while(1) {
-			scanf("%s", line);
-			fputs(line, stdout);
-			printf("\n");
-		}
+	while ((nread = read(src, buf, 1)) > 0) {
+		write(1, buf, 1);
 	}
+	write(1, "\n", 1);
+	close(src);
 } 
 
 
