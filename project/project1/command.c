@@ -45,7 +45,7 @@ void makeDir(char *dirName) {
 	int stat;
 	dir = opendir(dirName);
 	if (dir) {
-		perror("Directory already exist\n");
+		perror("Directory already exist");
 		closedir(dir);
 		return;
 	}
@@ -53,7 +53,7 @@ void makeDir(char *dirName) {
 		// give all permissions
 		stat = mkdir(dirName, 0777);
 		if (stat == -1) {
-			perror("mkdir failure\n");
+			perror("mkdir failure");
 		}
 	}
 } 
@@ -68,7 +68,7 @@ void changeDir(char *dirName) {
 	// argument, if possible
 	else { 
 		if (chdir(dirName) == -1) {
-			perror("Error: no such directory exist\n");
+			perror("Error: no such directory exist");
 			return;
 		}
 	}
@@ -158,7 +158,7 @@ void displayFile(char *filename) {
 	char buf[1];
 	src = open(filename, O_RDONLY);
 	if (src == -1) {
-		perror("File open failure\n");
+		perror("File open failure");
 		return;
 	}
 	while ((nread = read(src, buf, 1)) > 0) {
@@ -167,6 +167,3 @@ void displayFile(char *filename) {
 	write(1, "\n", 1);
 	close(src);
 } 
-
-
-

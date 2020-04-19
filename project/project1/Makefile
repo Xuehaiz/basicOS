@@ -5,7 +5,7 @@ objects = $(addsuffix .o, $(basename $(sources)))
 
 flags = -g -W -Wall -std=gnu99
 
-target = pseudu-shell
+target = pseudo-shell
 
 all: $(target) 
 

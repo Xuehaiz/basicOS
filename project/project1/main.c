@@ -35,12 +35,12 @@ int main(int argc, char const *argv[])
 	char *line = (char *)malloc(len * sizeof(char));
 	if (line == NULL) {
 		fprintf(stderr, "line allocation failure\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	char **wrd_in_token = (char **)malloc(len * sizeof(char *));
 	if (wrd_in_token == NULL) {
 		fprintf(stderr, "Buffer allocation failure\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 
@@ -58,15 +58,11 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	while (condition) {
+	while (getline(&line, &len, fp) != EOF) {
 		if (interactive) {
 			printf(">>> ");
 		}
-
-		if (getline(&line, &len, fp) == EOF) {
-			break;
-		}
-			
+	
 		if(!feof(fp)) {
 			line[strlen(line) - 1] = '\0';
 		}
