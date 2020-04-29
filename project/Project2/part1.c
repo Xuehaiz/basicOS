@@ -65,9 +65,10 @@ int main(int argc, char const *argv[])
 			fprintf(stderr, "log error. Failed to start program: %s\n", arg_arr[0]);
 			exit(-1);
 		}
+		i++;
 	}
 	
-	i++;
+	
 	for (int i = 0; i < numprograms; i++) {
 		waitpid(pid[i], NULL, 0);
 		printf("wait pid[%d]: %d\n", i, getpid());
