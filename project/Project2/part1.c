@@ -14,9 +14,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	int len = 256; 
 	char line[len];
 	int counter = 0;
-	// int i = 0;
+	int i = 0;
 	int numprograms = 0;
-	// char arg_arr[len][len];
 	// open file
 	FILE *fp = fopen(argv[1], "r");
 	if (fp == NULL) {
@@ -24,11 +23,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 	// memory allcation
-	/*char *line = (char *)malloc(len * sizeof(char));
-	if (line == NULL) {
-		fprintf(stderr, "line allocation failure\n");
-		exit(EXIT_FAILURE);
-	}*/
 	char **arg_arr = (char **)malloc(len * sizeof(char *));
 	if (arg_arr == NULL) {
 		fprintf(stderr, "Buffer allocation failure\n");
@@ -40,12 +34,9 @@ int main(int argc __attribute__((unused)), char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// pid_t pid[len];
 	while (fgets(line, len, fp) != NULL) {
-		// printf("here?\n");
 		numprograms++;
 		counter = 0;
-		// line[strlen(line) - 1] = '\0';
 		token = strtok(line, " \n");
 		while (token != NULL) {
 			arg_arr[counter] = token;
@@ -53,29 +44,22 @@ int main(int argc __attribute__((unused)), char const *argv[])
 			counter++;
 		}
 		arg_arr[counter] = NULL;
-/*		i = 0;
-		while (arg_arr[i]) {
-			if (i >= counter) {
-				arg_arr[i] = NULL;
-		}
-			// printf("arg_arr[%d]: %s\n", j, arg_arr[j]);
-			i++;
-		}*/
-	}
 
-	for (int i = 0; i < numprograms; i++) {
 		pid[i] = fork();
-		printf("forked, current process: %d\n", pid[i]);
 		if (pid[i] < 0) {
 			perror("fork error, no child created");
+			fclose(fp);
 			exit(EXIT_FAILURE);
 		}
-		if (pid[i] == 0) { /* child process */
-			fclose(fp);
+		if (pid[i] == 0) {
 			printf("Child process is %d, and parent pid is %d\n", getpid(), getppid());
 			printf("My status is %d\n\n", pid[i]);
+			printf("Running: %s\n", arg_arr[0]);
 			execvp(arg_arr[0], arg_arr);
+			fclose(fp);
 			perror("execvp");
+			free(pid);
+			free(arg_arr);
 			_exit(-1);
 		}
 		i++;
@@ -89,8 +73,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	// exit all
 	printf("All processes finished: parent exiting: my pid is %d \n\n", getpid());
 	fclose(fp);
-
-	// free(line);
 	free(pid);
 	free(arg_arr);
 	return 0;
