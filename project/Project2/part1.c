@@ -10,6 +10,9 @@
 int main(int argc, char const *argv[])
 {
 	// Variable declarations
+	if (argc != 0) {
+		printf("haha\n");;
+	}
 	FILE *fp = fopen(argv[1], "r");
 	char *token;
 	size_t len = 256; 
@@ -18,7 +21,7 @@ int main(int argc, char const *argv[])
 	int j = 0;
 	int numprograms = 0;
 	// memory allcation
-	char *line = (char *)malloc(len * sizeof(char));
+	char *line = (char *)malloc(256 * sizeof(char));
 	if (line == NULL) {
 		fprintf(stderr, "line allocation failure\n");
 		exit(EXIT_FAILURE);
@@ -34,13 +37,13 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "PID allocation failure\n");
 		exit(EXIT_FAILURE);
 	}
-
+	pid_t curr_pid;
 	while (getline(&line, &len, fp) != EOF) {
 		// printf("here?\n");
 		numprograms++;
 		counter = 0;
 		line[strlen(line) - 1] = '\0';
-		while ((token = strtok_r(line, " ", &line))) {
+		while ((token = strtok_r(line, " \n", &line))) {
 			arg_arr[counter] = token;
 			counter++;
 		}
@@ -52,29 +55,34 @@ int main(int argc, char const *argv[])
 			// printf("arg_arr[%d]: %s\n", j, arg_arr[j]);
 			j++;
 		}
-		pid[i] = fork();
+		arg_arr[j] = NULL;
+		curr_pid = fork();
 		// printf("pid: %d\n", pid[i]);
-		if (pid[i] < 0) {
+		if (curr_pid < 0) {
 			perror("fork error, no child created");
 			exit(EXIT_FAILURE);
 		}
-		if (pid[i] == 0) { /* child process */
+		if (curr_pid == 0) { /* child process */
 			printf("Executing: %s\n", arg_arr[0]);
 			execvp(arg_arr[0], arg_arr);
 			fprintf(stderr, "PID: %d ", getpid());
 			fprintf(stderr, "log error. Failed to start program: %s\n", arg_arr[0]);
 			exit(-1);
 		}
+		pid[i] = curr_pid;
+		i++;
 	}
 	
-	i++;
 	for (int i = 0; i < numprograms; i++) {
 		waitpid(pid[i], NULL, 0);
 		printf("wait pid[%d]: %d\n", i, getpid());
 	}
 
+
 	fclose(fp);
+
 	free(line);
+	printf("here?\n");
 	free(pid);
 	free(arg_arr);
 	return 0;
