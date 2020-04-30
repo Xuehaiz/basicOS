@@ -10,38 +10,45 @@
 int main(int argc __attribute__((unused)), char const *argv[])
 {
 	// Variable declarations
-	FILE *fp = fopen(argv[1], "r");
 	char *token;
-	size_t len = 256; 
+	int len = 256; 
+	char line[len];
 	int counter = 0;
 	int i = 0;
 	int j = 0;
 	int numprograms = 0;
+	// open file
+	FILE *fp = fopen(argv[1], "r");
+	/*if (fp == NULL) {
+		fprintf(stderr, "File <%s> open failure.\n", argv[1]);
+		exit(EXIT_FAILURE);
+	}*/
 	// memory allcation
-	char *line = (char *)malloc(256 * sizeof(char));
+	/*char *line = (char *)malloc(len * sizeof(char));
 	if (line == NULL) {
 		fprintf(stderr, "line allocation failure\n");
 		exit(EXIT_FAILURE);
-	}
+	}*/
 	char **arg_arr = (char **)malloc(len * sizeof(char *));
 	if (arg_arr == NULL) {
 		fprintf(stderr, "Buffer allocation failure\n");
 		exit(EXIT_FAILURE);
 	}
-
-	pid_t *pid = (pid_t *)malloc(256 * sizeof(pid_t));
-	if (pid == NULL) {
+	pid_t *pid = (pid_t *)malloc(len * sizeof(pid_t));
+	/*if (pid == NULL) {
 		fprintf(stderr, "PID allocation failure\n");
 		exit(EXIT_FAILURE);
-	}
+	}*/
 	pid_t curr_pid;
-	while (getline(&line, &len, fp) != EOF) {
+	while (fgets(line, len, fp) != NULL) {
 		// printf("here?\n");
 		numprograms++;
 		counter = 0;
-		line[strlen(line) - 1] = '\0';
-		while ((token = strtok_r(line, " \n", &line))) {
+		// line[strlen(line) - 1] = '\0';
+		token = strtok(line, " \n");
+		while (token != NULL) {
 			arg_arr[counter] = token;
+			token = strtok(NULL, " \n");
 			counter++;
 		}
 		j = 0;
@@ -55,12 +62,12 @@ int main(int argc __attribute__((unused)), char const *argv[])
 		arg_arr[j] = NULL;
 		curr_pid = fork();
 		// printf("pid: %d\n", pid[i]);
-		printf("Executing: %s\n", arg_arr[0]);
 		if (curr_pid < 0) {
 			perror("fork error, no child created");
 			exit(EXIT_FAILURE);
 		}
 		if (curr_pid == 0) { /* child process */
+			printf("Child process is %d, and parent pid is %d\n", getpid(), getppid());
 			execvp(arg_arr[0], arg_arr);
 			fprintf(stderr, "PID: %d ", getpid());
 			fprintf(stderr, "log error. Failed to start program: %s\n", arg_arr[0]);
@@ -76,7 +83,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	}
 
 	fclose(fp);
-	free(line);
+
+	// free(line);
 	free(pid);
 	free(arg_arr);
 	return 0;

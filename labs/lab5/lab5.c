@@ -20,9 +20,21 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "PID allocation failure\n");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	for (int i = 0; i < 5; i++) {
-		execv("./iobound", "-minutes", "1", NULL);
+		pid[i] = fork();
+		if (pid[i] < 0) {
+			perror("fork");
+			exit(EXIT_FAILURE);
+		}
+		else if (pid[i] == 0) {
+			printf("Child process created\n");
+			execlp("./iobound", "iobound", "-minutes", "1", NULL);
+			fprintf(stderr, "Didn't enter exec(), report error\n");
+		}
+		else {
+			printf("in parent process\n");
+		}
 	}
 	return 0;
 }
