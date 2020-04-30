@@ -1,16 +1,16 @@
 CFLAGS = -Wall -W -g
 CC = gcc
-OBJECTS = part1.o # part2.o part3.o part4.o part5.o iobound.o cpubound.o
-TARGETS = part1 # part2 part3 part4 part5 iobound cpubound
+OBJECTS = part2.o # part2.o part3.o part4.o part5.o iobound.o cpubound.o
+TARGETS = part2 # part2 part3 part4 part5 iobound cpubound
 RM = rm -rf
 
 all: $(TARGETS)
 
-part1: part1.o
-	$(CC) $(CFLAGS) -o part1 part1.o
+# part1: part1.o
+# 	$(CC) $(CFLAGS) -o part1 part1.o
 
-# part2: part2.o
-# 	$(CC) $(CFLAGS) -o part2 part2.o
+part2: part2.o
+	$(CC) $(CFLAGS) -o part2 part2.o
 
 # part3: part3.o
 # 	$(CC) $(CFLAGS) -o part3 part3.o
@@ -27,9 +27,9 @@ part1: part1.o
 # cpubound.o: cpubound.c
 # 	$(CC) $(CFLAGS) -o cpubound cpubound.o
 
-part1.o: part1.c
+# part1.o: part1.c
 
-# part2.o: part2.c
+part2.o: part2.c
 
 # part3.o: part3.c
 
