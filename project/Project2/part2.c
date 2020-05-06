@@ -61,7 +61,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	}
 
 	// sig struct and handler
-	int status;
+	// int status;
 	sigset_t sigset;
   	sigemptyset(&sigset);
   	sigaddset(&sigset, SIGUSR1);
@@ -74,9 +74,9 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	if (sigaction(SIGUSR1, &sa, NULL) == -1) {
 		perror("SIGUSR1");
 	}
-	if (sigaction(SIGSTOP, &sa, NULL) == -1) {
+	/*if (sigaction(SIGSTOP, &sa, NULL) == -1) {
 		perror("SIGSTOP");
-	}
+	}*/
 	if (sigaction(SIGCONT, &sa, NULL) == -1) {
 		perror("SIGCONT");
 	}
@@ -112,8 +112,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
 		    	printf("Child process: %d - Received signal: SIGUSR1 - calling exec().\n", getpid());
 		    }
 		    // call SIGSTOP to suspend the child process
-		    kill(pid[i], SIGSTOP);
-		    printf("Child process: %d - STOP\n", getpid());
+		    /*kill(pid[i], SIGSTOP);
+		    printf("Child process: %d - STOP\n", getpid());*/
 		    // Exec call
 		    execvp(arg_arr[0], arg_arr);
 		    // error report and free 
@@ -125,7 +125,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
 		    // End the child process
 		    _exit(-1);
 		}
-		else {
+		/*else {
 		    //Send the signals to the children
 		    printf("Parent process: %d - Sending signal: %d to child process: %d\n", getpid(), SIGUSR1, pid[i]);
 		    kill(pid[i], SIGUSR1);
@@ -138,24 +138,33 @@ int main(int argc __attribute__((unused)), char const *argv[])
 		    printf("Parent process: %d - Joining child process: %d\n", getpid(), pid[i]);
 		    pid[i] = waitpid(pid[i], &status, 0);
 		    printf("Parent process: %d - child process: %d joined\n", getpid(), pid[i]);
-  		}
+  		}*/
 		i++;
 	}
 	
-	// for (int i = 0; i < numprograms; i++) {
-	// 	kill(pid[i], SIGUSR1);
-	// }
-	
-/*	for (int i = 0; i < numprograms; i++) {
+	for (int i = 0; i < numprograms; i++) {
+		printf("Sending signal: %d to child process: %d\n", SIGUSR1, pid[i]);
+		kill(pid[i], SIGUSR1);
+		printf("Signal SIGUSR1 sent.\n");
+	}
+	sleep(2);
+	for (int i = 0; i < numprograms; i++) {
+		printf("Sending signal: %d to pid: %d\n", SIGCONT, pid[i]);
+		kill(pid[i], SIGSTOP);
+		printf("Signal SIGSTOP sent.\n");
+	}
+	sleep(2);
+	for (int i = 0; i < numprograms; i++) {
+		printf("Sending signal: %d to pid: %d\n", SIGCONT, pid[i]);
+		kill(pid[i], SIGCONT);
+		printf("Signal SIGCONT sent.\n");
+	}
+
+	for (int i = 0; i < numprograms; i++) {
 		waitpid(pid[i], NULL, 0);
 		// wait(0);
 		printf("wait pid[%d]: %d\n", i, pid[i]);
-	}*/
-	/*for (int i = 0; i < numprograms; i++) {
-		printf("Sending signal: %d to child process: %d\n", SIGCONT, pid[i]);
-		kill(pid[i], SIGCONT);
-		printf("Parent process: %d - Signal SIGCONT sent.\n", getpid());
-	}*/
+	}
 
 	// exit all
 	printf("All processes finished: parent exiting: my pid is %d \n\n", getpid());
