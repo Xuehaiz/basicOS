@@ -60,9 +60,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
     /*if (sigaction(SIGSTOP, &sa, NULL) == -1) {
         perror("SIGSTOP");
     }*/
-    if (sigaction(SIGALRM, &sa, NULL) == -1) {
-        perror("SIGUSR1");
-    }
     if (sigaction(SIGCONT, &sa, NULL) == -1) {
         perror("SIGCONT");
     }
@@ -111,10 +108,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
     int signal;
     int status;
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 34dfc418deb10629b056db1cc97113f3d9392d8b
     while (condition) {
         condition = 0;
         for (int k = 0; k < numprograms; k++) {
@@ -138,10 +132,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
                     alive++;
                 }
             }
-<<<<<<< HEAD
-=======
             
->>>>>>> 34dfc418deb10629b056db1cc97113f3d9392d8b
             if (alive <= 1) {
                 // run the last process 
                 /*for (int i = 0; i < numprograms; i++) {
