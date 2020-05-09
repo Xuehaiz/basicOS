@@ -10,7 +10,7 @@
 
 
 void sig_handler(int sig) {  
-    printf("Child process: %d - received signal: %d\n", getpid(), sig);
+    // printf("Child process: %d - received signal: %d\n", getpid(), sig);
 }
 
 int main(int argc __attribute__((unused)), char const *argv[])
@@ -57,12 +57,11 @@ int main(int argc __attribute__((unused)), char const *argv[])
     if (sigaction(SIGUSR1, &sa, NULL) == -1) {
         perror("SIGUSR1");
     }
-    /*if (sigaction(SIGSTOP, &sa, NULL) == -1) {
-        perror("SIGSTOP");
-    }*/
     if (sigaction(SIGCONT, &sa, NULL) == -1) {
         perror("SIGCONT");
     }
+
+    printf("        Name     State          Pid     PPid\n");
 
     while (fgets(line, len, fp) != NULL) {
         numprograms++;
@@ -84,12 +83,12 @@ int main(int argc __attribute__((unused)), char const *argv[])
             exit(EXIT_FAILURE);
         }
         if (pid[i] == 0) {
-            printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
+            // printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
             // raise SIGSTOP
-            printf("Child process: %d - rasing SIGSTOP\n", getpid());
+            // printf("Child process: %d - rasing SIGSTOP\n", getpid());
             raise(SIGSTOP);
             // Exec call
-            printf("Child process: %d - calling exec().\n", getpid());
+            // printf("Child process: %d - calling exec().\n", getpid());
             execvp(arg_arr[0], arg_arr);
             // error report and free 
             perror("execvp");
@@ -107,20 +106,68 @@ int main(int argc __attribute__((unused)), char const *argv[])
     int alive = 0;
     int signal;
     int status;
+    
+    char strpid[16];
+    int lineNum;
+    FILE *psf;
+    char *filename = (char *)malloc(strlen("/proc/") + strlen(strpid) + strlen("/status"));
+    char **info_arr = (char **)malloc(len * sizeof(char *));
 
     while (condition) {
         condition = 0;
         for (int k = 0; k < numprograms; k++) {
             if (waitpid(pid[k], &status, WNOHANG) != -1) {  // determine if the process is alive
                 kill(pid[k], SIGCONT);
-                alarm(1);
-                printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
-                if (sigwait(&sigset, &signal) == 0) {
-                    printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
+                strcpy(filename, "");
+                sprintf(strpid, "%d", pid[k]);
+                strcat(filename, "/proc/");
+                strcat(filename, strpid);
+                strcat(filename, "/status");
+                printf("filename: %s\n", filename);
+                psf = fopen(filename, "r");
+                if (psf) {
+                    lineNum = 0;
+                    while (fgets(line, len, psf) != NULL) {
+                        counter = 0;
+                        token = strtok(line, " :\n");
+                        while (token != NULL) {
+                            info_arr[counter] = token;
+                            token = strtok(NULL, " :\n");
+                            counter++;
+                        }
+                        if (lineNum == 0) {
+                            printf("%s ", info_arr[1]);
+                        }
+                        else if (lineNum == 2) {
+                            printf("%s %s   ", info_arr[1], info_arr[2]);
+                        }
+                        else if (lineNum == 5) {
+                            printf("%s   ", info_arr[1]);
+                        }
+                        else if (lineNum == 6) {
+                            printf("%s   \n", info_arr[1]);
+                        }
+                        lineNum++;
+                    }
                 }
+                else {
+                    perror("psf open");
+                    fclose(fp);
+                    fclose(psf);
+                    free(info_arr);
+                    free(filename);
+                    free(pid);
+                    free(arg_arr);
+                    exit(-1);
+                }
+                alarm(1);
+                // printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
+                sigwait(&sigset, &signal);
+                // printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
+                
                 if (waitpid(pid[k], &status, WNOHANG) != -1) {
                     kill(pid[k], SIGSTOP);
-                    printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
+                    // printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
                     condition = 1; 
                 }
             }
@@ -132,29 +179,25 @@ int main(int argc __attribute__((unused)), char const *argv[])
                 }
             }
             if (alive <= 1) {
-                // run the last process 
-                for (int i = 0; i < numprograms; i++) {
-                    if (waitpid(pid[i], &status, WNOHANG) == 0) {
-                        kill(pid[i], SIGCONT);
-                        printf("Finishing up the last process: %d\n", pid[i]);
-                    }
-                }
                 condition = 0; 
                 break;
             }
         }
     }
-    
+    // wait the last pid to finish
     for (int i = 0; i < numprograms; i++) {
         waitpid(pid[i], NULL, 0);
         // wait(0);
-        printf("wait pid[%d]: %d\n", i, pid[i]);
+        // printf("wait pid[%d]: %d\n", i, pid[i]);
     }
 
     // exit all
 
-    printf("All processes finished: parent exiting: my pid is %d \n\n", getpid());
+    // printf("All processes finished: parent exiting: my pid is %d \n\n", getpid());
     fclose(fp);
+    free(filename);
+    //fclose(psf);
+    free(info_arr);
     free(pid);
     free(arg_arr);
     return 0;
