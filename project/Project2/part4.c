@@ -19,6 +19,12 @@ void print_status(FILE *psf) {
     char *token;
     char line[256];
     char **info_arr = (char **)malloc(256 * sizeof(char *));
+    // read each line in status, 
+    // since line 1 is always the Name. tokenize the Name ans print it out
+    // and line 3 is always the State, then take the state and print
+    // line 4 is PID and line 5 is PPID, print them out 
+    // if want to add more information, just find the information on the corresponding line 
+    // find that line and print info
     while (fgets(line, 256, psf) != NULL) {
         counter = 0;
         token = strtok(line, " :\n");
@@ -149,26 +155,30 @@ int main(int argc __attribute__((unused)), char const *argv[])
     while (condition) {
         condition = 0;
         for (int k = 0; k < numprograms; k++) {
+            // clean the filename empty 
             strcpy(filename, "");
+            // combine string to get the filename
             sprintf(strpid, "%d", pid[k]);
             strcat(filename, "/proc/");
             strcat(filename, strpid);
             strcat(filename, "/status");
             printf("filename: %s\n", filename);
             psf = fopen(filename, "r");
+            // run print_status
             if (psf) {
                 print_status(psf);
             }
+
             if (waitpid(pid[k], &status, WNOHANG) != -1) {  // determine if the process is alive
                 kill(pid[k], SIGCONT);
                 alarm(1);
-                printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
+                //printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
                 if (sigwait(&sigset, &signal) == 0) {
                     printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
                 }
                 if (waitpid(pid[k], &status, WNOHANG) != -1) {
                     kill(pid[k], SIGSTOP);
-                    printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
+                    // printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
                     condition = 1; 
                 }
             }
