@@ -60,9 +60,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
     /*if (sigaction(SIGSTOP, &sa, NULL) == -1) {
         perror("SIGSTOP");
     }*/
-    if (sigaction(SIGALRM, &sa, NULL) == -1) {
-        perror("SIGUSR1");
-    }
     if (sigaction(SIGCONT, &sa, NULL) == -1) {
         perror("SIGCONT");
     }

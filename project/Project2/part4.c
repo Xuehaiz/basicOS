@@ -9,8 +9,39 @@
 #include <unistd.h>
 
 
-void sig_handler(int sig) {  
-    printf("Child process: %d - received signal: %d\n", getpid(), sig);
+void sig_handler(int sig __attribute__((unused))) {  
+    // printf("Child process: %d - received signal: %d\n", getpid(), sig);
+}
+
+void print_status(FILE *psf) {
+    int lineNum = 0;
+    int counter = 0;
+    char *token;
+    char line[256];
+    char **info_arr = (char **)malloc(256 * sizeof(char *));
+    while (fgets(line, 256, psf) != NULL) {
+        counter = 0;
+        token = strtok(line, " :\n");
+        while (token != NULL) {
+            info_arr[counter] = token;
+            token = strtok(NULL, " :\n");
+            counter++;
+        }
+        if (lineNum == 0) {
+            printf("%s ", info_arr[1]);
+        }
+        else if (lineNum == 2) {
+            printf("%s %s   ", info_arr[1], info_arr[2]);
+        }
+        else if (lineNum == 5) {
+            printf("%s   ", info_arr[1]);
+        }
+        else if (lineNum == 6) {
+            printf("%s   \n", info_arr[1]);
+        }
+        lineNum++;
+    }
+    free(info_arr);
 }
 
 int main(int argc __attribute__((unused)), char const *argv[])
@@ -60,12 +91,11 @@ int main(int argc __attribute__((unused)), char const *argv[])
     /*if (sigaction(SIGSTOP, &sa, NULL) == -1) {
         perror("SIGSTOP");
     }*/
-    if (sigaction(SIGALRM, &sa, NULL) == -1) {
-        perror("SIGUSR1");
-    }
     if (sigaction(SIGCONT, &sa, NULL) == -1) {
         perror("SIGCONT");
     }
+
+    printf("       Name      State        Pid        PPid\n");
 
     while (fgets(line, len, fp) != NULL) {
         numprograms++;
@@ -87,15 +117,15 @@ int main(int argc __attribute__((unused)), char const *argv[])
             exit(EXIT_FAILURE);
         }
         if (pid[i] == 0) {
-            printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
+            //printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
             // raise SIGSTOP
-            printf("Child process: %d - rasing SIGSTOP\n", getpid());
+            //printf("Child process: %d - rasing SIGSTOP\n", getpid());
             raise(SIGSTOP);
             // Exec call
-            printf("Child process: %d - calling exec().\n", getpid());
+            //printf("Child process: %d - calling exec().\n", getpid());
             execvp(arg_arr[0], arg_arr);
             // error report and free 
-            perror("execvp");
+            //perror("execvp");
             fclose(fp);
             free(pid);
             free(arg_arr);
@@ -111,10 +141,24 @@ int main(int argc __attribute__((unused)), char const *argv[])
     int signal;
     int status;
 
+    char strpid[16];
+    FILE *psf;
+    char filename[32];
+
 
     while (condition) {
         condition = 0;
         for (int k = 0; k < numprograms; k++) {
+            strcpy(filename, "");
+            sprintf(strpid, "%d", pid[k]);
+            strcat(filename, "/proc/");
+            strcat(filename, strpid);
+            strcat(filename, "/status");
+            printf("filename: %s\n", filename);
+            psf = fopen(filename, "r");
+            if (psf) {
+                print_status(psf);
+            }
             if (waitpid(pid[k], &status, WNOHANG) != -1) {  // determine if the process is alive
                 kill(pid[k], SIGCONT);
                 alarm(1);
@@ -137,13 +181,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
             }
             
             if (alive <= 1) {
-                // run the last process 
-                /*for (int i = 0; i < numprograms; i++) {
-                    if (waitpid(pid[i], &status, WNOHANG) == 0) {
-                        kill(pid[i], SIGCONT);
-                        printf("Finishing up the last process: %d\n", pid[i]);
-                    }
-                }*/
                 condition = 0; 
                 break;
             }
