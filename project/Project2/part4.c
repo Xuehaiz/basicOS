@@ -199,7 +199,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
                 break;
             }
 
-            /*FILE *psf;
+            FILE *psf;
             char filename[32];
 
             for (int i = 0; i < numprograms; i++) {
@@ -216,14 +216,14 @@ int main(int argc __attribute__((unused)), char const *argv[])
                     }
                     
                 }
-            }*/
+            }
         }
     }
     
     for (int i = 0; i < numprograms; i++) {
         waitpid(pid[i], NULL, 0);
         // wait(0);
-        printf("wait pid[%d]: %d\n", i, pid[i]);
+        // printf("wait pid[%d]: %d\n", i, pid[i]);
     }
 
     // exit all
