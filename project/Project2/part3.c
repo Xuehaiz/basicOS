@@ -45,9 +45,11 @@ int main(int argc __attribute__((unused)), char const *argv[])
 
     // sig struct and handler
     // int status;
+    int signal;
     sigset_t sigset;
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGALRM);
+    sigaddset(&sigset, SIGUSR1);
     sigprocmask(SIG_BLOCK, &sigset, NULL);
     struct sigaction sa;
     if (memset (&sa, '\0', sizeof(sa)) == NULL) {
@@ -57,11 +59,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
     if (sigaction(SIGUSR1, &sa, NULL) == -1) {
         perror("SIGUSR1");
     }
-    /*if (sigaction(SIGSTOP, &sa, NULL) == -1) {
-        perror("SIGSTOP");
-    }*/
     if (sigaction(SIGALRM, &sa, NULL) == -1) {
-        perror("SIGUSR1");
+        perror("SIGALRM");
     }
     if (sigaction(SIGCONT, &sa, NULL) == -1) {
         perror("SIGCONT");
@@ -89,8 +88,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
         if (pid[i] == 0) {
             printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
             // raise SIGSTOP
-            printf("Child process: %d - rasing SIGSTOP\n", getpid());
-            raise(SIGSTOP);
+            printf("Child process: %d - waiting SIGUSR1\n", getpid());
+            sigwait(&sigset, &signal);
             // Exec call
             printf("Child process: %d - calling exec().\n", getpid());
             execvp(arg_arr[0], arg_arr);
@@ -108,21 +107,33 @@ int main(int argc __attribute__((unused)), char const *argv[])
     
     int condition = 1;
     int alive = 0;
-    int signal;
     int status;
+    pid_t wpid;
 
+    for (int i = 0; i < numprograms; i++) {
+        printf("Sending signal: %d to child process: %d\n", SIGUSR1, pid[i]);
+        kill(pid[i], SIGUSR1);
+        printf("Signal SIGUSR1 sent.\n");
+    }
+
+    for (int i = 0; i < numprograms; i++) {
+        printf("Sending signal: %d to pid: %d\n", SIGSTOP, pid[i]);
+        kill(pid[i], SIGSTOP);
+        printf("Signal SIGSTOP sent.\n");
+    }
 
     while (condition) {
         condition = 0;
         for (int k = 0; k < numprograms; k++) {
-            if (waitpid(pid[k], &status, WNOHANG) != -1) {  // determine if the process is alive
+            wpid = waitpid(pid[k], &status, WNOHANG);
+            if (wpid != -1) {  // determine if the process is alive
                 kill(pid[k], SIGCONT);
                 alarm(1);
                 printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
                 if (sigwait(&sigset, &signal) == 0) {
                     printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
                 }
-                if (waitpid(pid[k], &status, WNOHANG) != -1) {
+                if (WIFEXITED(status)) {
                     kill(pid[k], SIGSTOP);
                     printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
                     condition = 1; 
@@ -131,19 +142,19 @@ int main(int argc __attribute__((unused)), char const *argv[])
             // count the number of the alive processes
             alive = 0;
             for (int i = 0; i < numprograms; i++) {
-                if (waitpid(pid[i], &status, WNOHANG) != -1) {
+                wpid = waitpid(pid[i], &status, WNOHANG);
+                if (wpid != -1) {
                     alive++;
                 }
             }
-            
             if (alive <= 1) {
-                // run the last process 
-                /*for (int i = 0; i < numprograms; i++) {
-                    if (waitpid(pid[i], &status, WNOHANG) == 0) {
+                for (int i = 0; i < numprograms; i++) {
+                    wpid = waitpid(pid[i], &status, WNOHANG);
+                    if (wpid != -1) {
                         kill(pid[i], SIGCONT);
                         printf("Finishing up the last process: %d\n", pid[i]);
                     }
-                }*/
+                }
                 condition = 0; 
                 break;
             }
