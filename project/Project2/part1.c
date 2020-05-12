@@ -47,7 +47,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
 
 		pid[i] = fork();
 		if (pid[i] < 0) {
-
 			perror("fork error, no child created");
 			fclose(fp);
 			exit(EXIT_FAILURE);
