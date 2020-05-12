@@ -9,13 +9,13 @@
 #include <unistd.h>
 
 
-void sig_handler(int sig) {  
-    printf("Child process: %d - received signal: %d\n", getpid(), sig);
+void sig_handler(int sig __attribute__ ((unused))) {  
+    //printf("Child process: %d - received signal: %d\n", getpid(), sig);
 }
 
 
 void print_status(FILE *psf) {
-    printf("here?\n");
+    //printf("here?\n");
     int lineNum = 0;
     int counter = 0;
     char *token;
@@ -126,15 +126,15 @@ int main(int argc __attribute__((unused)), char const *argv[])
             exit(EXIT_FAILURE);
         }
         if (pid[i] == 0) {
-            printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
+            //printf("Child process: %d - Starting executing %s.\n", getpid(), arg_arr[0]);
             // raise SIGSTOP
-            printf("Child process: %d - waiting SIGUSR1\n", getpid());
+            //printf("Child process: %d - waiting SIGUSR1\n", getpid());
             sigwait(&sigset, &signal);
             // Exec call
-            printf("Child process: %d - calling exec().\n", getpid());
+            //printf("Child process: %d - calling exec().\n", getpid());
             execvp(arg_arr[0], arg_arr);
             // error report and free 
-            perror("execvp");
+            //perror("execvp");
             fclose(fp);
             free(pid);
             free(arg_arr);
@@ -151,15 +151,15 @@ int main(int argc __attribute__((unused)), char const *argv[])
     pid_t wpid;
 
     for (int i = 0; i < numprograms; i++) {
-        printf("Sending signal: %d to child process: %d\n", SIGUSR1, pid[i]);
+        //printf("Sending signal: %d to child process: %d\n", SIGUSR1, pid[i]);
         kill(pid[i], SIGUSR1);
-        printf("Signal SIGUSR1 sent.\n");
+        //printf("Signal SIGUSR1 sent.\n");
     }
 
     for (int i = 0; i < numprograms; i++) {
-        printf("Sending signal: %d to pid: %d\n", SIGSTOP, pid[i]);
+        //printf("Sending signal: %d to pid: %d\n", SIGSTOP, pid[i]);
         kill(pid[i], SIGSTOP);
-        printf("Signal SIGSTOP sent.\n");
+        //printf("Signal SIGSTOP sent.\n");
     }
 
     while (condition) {
@@ -169,13 +169,13 @@ int main(int argc __attribute__((unused)), char const *argv[])
             if (wpid != -1) {  // determine if the process is alive
                 kill(pid[k], SIGCONT);
                 alarm(1);
-                printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
+                //printf("Parent PID %d resumed suspended child PID %d\n", getpid(), pid[k]);
                 if (sigwait(&sigset, &signal) == 0) {
-                    printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
+                    //printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
                 }
                 if (WIFEXITED(status)) {
                     kill(pid[k], SIGSTOP);
-                    printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
+                    //printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
                     condition = 1; 
                 }
             }
@@ -192,30 +192,31 @@ int main(int argc __attribute__((unused)), char const *argv[])
                     wpid = waitpid(pid[i], &status, WNOHANG);
                     if (wpid != -1) {
                         kill(pid[i], SIGCONT);
-                        printf("Finishing up the last process: %d\n", pid[i]);
+                        //printf("Finishing up the last process: %d\n", pid[i]);
                     }
                 }
                 condition = 0; 
                 break;
             }
 
-            FILE *psf;
+            /*FILE *psf;
             char filename[32];
 
             for (int i = 0; i < numprograms; i++) {
                 if (waitpid(pid[i], &status, WNOHANG) == 0) {
 
                     strcpy(filename, "");
-                    sprintf(filename, "proc/%d/status", pid[i]);
+                    sprintf(filename, "/proc/%d/status", pid[i]);
 
                     psf = fopen(filename, "r");
 
                     if (psf) {
                         print_status(psf);
+                        fclose(psf);
                     }
-                    fclose(psf);
+                    
                 }
-            }
+            }*/
         }
     }
     
