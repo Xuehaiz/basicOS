@@ -50,11 +50,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGALRM);
     sigaddset(&sigset, SIGUSR1);
-    sigaddset(&sigset, SIGCONT);
-    sigaddset(&sigset, SIGSTOP);
     sigprocmask(SIG_BLOCK, &sigset, NULL);
     struct sigaction sa;
-
     if (memset (&sa, '\0', sizeof(sa)) == NULL) {
         perror("memset");
     }
