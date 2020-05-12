@@ -79,6 +79,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
             counter++;
         }
         arg_arr[counter] = NULL;
+        printf("arg_arr: %s %s \n", arg_arr[0], arg_arr[1]);
 
         pid[i] = fork();
         if (pid[i] < 0) {
