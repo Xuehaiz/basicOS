@@ -10,11 +10,12 @@
 
 
 void sig_handler(int sig __attribute__ ((unused))) {  
-    // printf("Child process: %d - received signal: %d\n", getpid(), sig);
+    //printf("Child process: %d - received signal: %d\n", getpid(), sig);
 }
 
 
 void print_status(FILE *psf) {
+    //printf("here?\n");
     int lineNum = 0;
     int counter = 0;
     char *token;
@@ -203,9 +204,12 @@ int main(int argc __attribute__((unused)), char const *argv[])
 
             for (int i = 0; i < numprograms; i++) {
                 if (waitpid(pid[i], &status, WNOHANG) == 0) {
+
                     strcpy(filename, "");
                     sprintf(filename, "/proc/%d/status", pid[i]);
+
                     psf = fopen(filename, "r");
+
                     if (psf) {
                         print_status(psf);
                         fclose(psf);
@@ -219,7 +223,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
     for (int i = 0; i < numprograms; i++) {
         waitpid(pid[i], NULL, 0);
         // wait(0);
-        printf("wait pid[%d]: %d\n", i, pid[i]);
+        // printf("wait pid[%d]: %d\n", i, pid[i]);
     }
 
     // exit all
