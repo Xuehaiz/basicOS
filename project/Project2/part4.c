@@ -208,8 +208,9 @@ int main(int argc __attribute__((unused)), char const *argv[])
                     psf = fopen(filename, "r");
                     if (psf) {
                         print_status(psf);
+                        fclose(psf);
                     }
-                    fclose(psf);
+                    
                 }
             }
         }
