@@ -1,10 +1,10 @@
-put 1 "someurl" "somecaption"
+put 1 "https://www.google.com/" "google"
 sleep 500
-put 2 "someurl" "somecaption"
-put 2 "someurl" "somecaption"
+put 2 "https://www.amazon.com/" "amazon"
+put 2 "https://www.neimanmarcus.com/" "neiman"
 sleep 500
-put 3 "someurl" "somecaption"
-put 3 "someurl" "somecaption"
-put 3 "someurl" "somecaption"
+put 3 "https://www.wholefoodsmarket.com/" "wholefoods"
+put 3 "https://www.costco.com/" "costco"
+put 3 "https://world.taobao.com/" "taobao"
 sleep 500
 stop
