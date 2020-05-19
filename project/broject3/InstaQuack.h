@@ -32,6 +32,8 @@ struct topicQueue {
 	int length;
 	time_t age;
 	int counter;
+	int isfull;
+	int isempty;
 } topicQueue;
 
 struct Threads {

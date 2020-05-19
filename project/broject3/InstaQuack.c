@@ -21,19 +21,27 @@ void initialize() { // int qID
 int enqueue(int TQ_ID, struct topicEntry TE) {
 	for (int i = 0; i < MAXQUEUES; i++) {
 		if (queues[i].qID == TQ_ID) {
-			if ((queues[i].tail - queues[i].head) == -1) { // buffer is full
+			if (queues[i].isfull) { // buffer is full
 				return 0;
 			}
 			if (queues[i].buffer[queues[i].tail].entryNum != -1) {
 				TE.entryNum = queues[i].counter;
 				queues[i].counter++;
+				queues[i].isempty = 0;
 				queues[i].buffer[queues[i].tail] = TE;
 				gettimeofday(&(queues[i].buffer[queues[i].tail].timeStamp), NULL);
-				if (queues[i].tail == queues[i].length) {
+				if (queues[i].tail + 1 == queues[i].length) {
+					queues[i].tail++;
+					if (queues[i].tail == queues[i].head) {
+						queues[i].isfull = 1;
+					}
 					queues[i].tail = 0;
 				}
 				else {
 					queues[i].tail++;
+				}
+				if (queues[i].tail == queues[i].head) {
+					queues[i].isfull = 1;
 				}
 				return 1;
 			}
@@ -46,7 +54,7 @@ int enqueue(int TQ_ID, struct topicEntry TE) {
 int dequeue(int TQ_ID, struct topicEntry *TE) {
 	for (int i = 0; i < MAXQUEUES; i++) {
 		if (queues[i].qID == TQ_ID) {
-			if (queues[i].head == queues[i].tail) {  // buffer is empty
+			if (queues[i].isempty) {  // buffer is empty
 				return 0;
 			}
 			TE->entryNum = queues[i].buffer[queues[i].head].entryNum;
@@ -63,14 +71,22 @@ int dequeue(int TQ_ID, struct topicEntry *TE) {
 				queues[i].buffer[queues[i].head - 1].entryNum = 0;
 			}
 			// change the current entry to null
+			queues[i].isfull = 0;
 			queues[i].buffer[queues[i].head].entryNum = -1;
 
 			// increment the head
-			if (queues[i].head == queues[i].length) {
+			if (queues[i].head + 1 == queues[i].length) {
+				queues[i].head++;
+				if (queues[i].tail == queues[i].head) {
+					queues[i].isempty = 1;
+				}
 				queues[i].head = 0;
 			}
 			else {
 				queues[i].head++;
+			}
+			if (queues[i].tail == queues[i].head) {
+					queues[i].isempty = 1;
 			}
 			return 1;
 		}
