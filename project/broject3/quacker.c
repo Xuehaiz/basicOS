@@ -437,23 +437,26 @@ int main(int argc, char const *argv[])
 	pthread_t cleanThread;
 	pthread_create(&cleanThread, NULL, &clean, (void *) &delta_t);
 
-	for (int i = 0; i < NUMPROXIES; i++) {
-		if (!pthread_join(pubPool[i].thread, NULL)) {
+	for (int i = 0; i < pubFileCtr; i++) {
+		if (pthread_join(pubPool[i].thread, NULL)) {
 			fprintf(stderr, "Error! Thread pubPool[%d] join failed\n", i);
 		}
 	}
 	
-	for (int i = 0; i < NUMPROXIES; i++) {
-		if (!pthread_join(subPool[i].thread, NULL)) {
+	for (int i = 0; i < subFileCtr; i++) {
+		if (pthread_join(subPool[i].thread, NULL)) {
 			fprintf(stderr, "Error! Thread subPool[%d] join failed\n", i);
 		}
 	}
 
-	if (!pthread_join(cleanThread, NULL)) {
+	sleep(20);
+	condition = 0;
+
+	if (pthread_join(cleanThread, NULL)) {
 		fprintf(stderr, "Error! Clean thread join failed\n");
 	}
 
-	condition = 0;
+	
 
 	free(line);
 	destroyLock();
