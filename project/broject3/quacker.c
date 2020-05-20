@@ -22,9 +22,9 @@
 
 topicStore TS;
 
-int initPool(threadPool myPool) {
-	myPool.thread_idx = 0;
-	myPool.isFree = 1;
+int initPool(threadPool *myPool) {
+	myPool->thread_idx = 0;
+	myPool->isFree = 1;
 	return 1;
 }
 
@@ -52,9 +52,9 @@ void *publisher(void *voidPool) {
 
 int pubParse(pthread_mutex_t mylock, char *filename) {
 	FILE *fpub;
-	char *line;
+	size_t len = 256;
+	char *line = (char *)malloc(len * sizeof(char));
 	char *saveptr;
-	size_t len;
 	char *token;
 	int arg_ctr = 0;
 	char *arg_arr[128];
@@ -121,6 +121,7 @@ int pubParse(pthread_mutex_t mylock, char *filename) {
 		}
 		sched_yield();
 	}
+	free(line);
 	return 1;
 }
 
@@ -136,8 +137,8 @@ void *subscriber(void *voidPool) {
 
 int subParse(pthread_mutex_t mylock, char *filename) {
 	FILE *fsub;
-	char *line;
-	size_t len;
+	size_t len = 256;
+	char *line = (char *)malloc(len * sizeof(char));
 	char *token;
 	char *saveptr;
 	int arg_ctr = 0;
@@ -217,6 +218,7 @@ int subParse(pthread_mutex_t mylock, char *filename) {
 		}
 		sched_yield();
 	}
+	free(line);
 	return 1;
 }
 
@@ -243,10 +245,13 @@ void *clean(void *voidDelta) {
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > *delta) {
 						for (int i = 0; i < NUMPROXIES; i++) {
-							pthread_mutex_lock(&mylock[th_idx]);
+							pthread_mutex_lock(&mylock[i]);
 							success = dequeue(&myEntry, &TS.topics[i]);
-							pthread_mutex_unlock(&mylock[th_idx]);
-							if (success) break;
+							pthread_mutex_unlock(&mylock[i]);
+							if (success) {
+								printf("Clean thread <%ld> dequeued entry <%d>\n", pthread_self(), myEntry.entryNum);
+								break;
+							}
 						}
 					}
 					// If we hit an entry that's not old enough, all entries after that aren't either
@@ -265,7 +270,9 @@ void *clean(void *voidDelta) {
 
 int joinPool(threadPool *myPool) {
 	for (int i = 0; i < NUMPROXIES; i++) {
-		pthread_join(myPool[i].thread, NULL);
+		if (!pthread_join(myPool[i].thread, NULL)) {
+			printf("Error! pool join failed\n");
+		}
 	}
 	return 1;
 }
@@ -314,8 +321,8 @@ int main(int argc, char const *argv[])
 	threadPool subPool[NUMPROXIES];
 
 	for (int i = 0; i < NUMPROXIES; i++) {
-		initPool(pubPool[i]);
-		initPool(subPool[i]);
+		initPool(&pubPool[i]);
+		initPool(&subPool[i]);
 	}
     initLock();
 
@@ -331,10 +338,6 @@ int main(int argc, char const *argv[])
 			token = strtok_r(NULL, " \"\r\n", &saveptr);
 			arg_ctr++;
 		}
-		for (int i = 0; i < arg_ctr; i++) {
-			printf("arg_arr[%d]: %s  ", i, arg_arr[i]);
-		}
-		printf("\n");
 		if (strcmp(arg_arr[0], "create") == 0 && strcmp(arg_arr[1], "topic") == 0) {
 			sscanf(arg_arr[2], "%d", &topicID);
 			sscanf(arg_arr[4], "%d", &queueLen);
@@ -374,7 +377,6 @@ int main(int argc, char const *argv[])
 			if (strcmp(arg_arr[1], "publisher") == 0 && pubFileCtr <= MAXPUBS) {
 				strcpy(pub_file_arr[pubFileCtr], arg_arr[2]);
 				pubFileCtr++;
-				printf("Publisher <%d> to be read from <%s> added!\n", pubFileCtr, arg_arr[2]);
 				// find a free thread and create thread
 				iter = 0;
 				while (TRUE) {
@@ -389,13 +391,12 @@ int main(int argc, char const *argv[])
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
-				printf("Spawning publisher <%d>...\n", subFileCtr);
 				pthread_create(&pubPool[pub_idx].thread, NULL, &publisher, (void *) &pubPool[pub_idx]);
+				printf("Publisher <%d> to be read from <%s> added!\n", pubFileCtr, arg_arr[2]);
 			}
 			else if (strcmp(arg_arr[1], "subscriber") == 0 && subFileCtr <= MAXSUBS) {
-				strcpy(sub_file_arr[pubFileCtr], arg_arr[2]);
+				strcpy(sub_file_arr[subFileCtr], arg_arr[2]);
 				subFileCtr++;
-				printf("Subscriber <%d> to be read from <%s> added!\n", subFileCtr, arg_arr[2]);
 				iter = 0;
 				while (TRUE) {
 					if (iter >= MAXPUBS) {
@@ -409,8 +410,8 @@ int main(int argc, char const *argv[])
 				}
 				strcpy(subPool[sub_idx].filename, arg_arr[2]);
 				subPool[pub_idx].thread_idx = sub_idx;
-				printf("Spawning subscriber <%d>...\n", subFileCtr);
 				pthread_create(&subPool[sub_idx].thread, NULL, &subscriber, (void *) &subPool[sub_idx]);
+				printf("Subscriber <%d> to be read from <%s> added!\n", subFileCtr, arg_arr[2]);
 			}
 			else {
 				fprintf(stderr, "Error! Can't add %s\n", arg_arr[1]);
@@ -436,8 +437,25 @@ int main(int argc, char const *argv[])
 	pthread_t cleanThread;
 	pthread_create(&cleanThread, NULL, &clean, (void *) &delta_t);
 
-	joinPool(pubPool);
-	joinPool(subPool);
+	for (int i = 0; i < NUMPROXIES; i++) {
+		if (!pthread_join(pubPool[i].thread, NULL)) {
+			fprintf(stderr, "Error! Thread pubPool[%d] join failed\n", i);
+		}
+	}
+	
+	for (int i = 0; i < NUMPROXIES; i++) {
+		if (!pthread_join(subPool[i].thread, NULL)) {
+			fprintf(stderr, "Error! Thread subPool[%d] join failed\n", i);
+		}
+	}
+
+	if (!pthread_join(cleanThread, NULL)) {
+		fprintf(stderr, "Error! Clean thread join failed\n");
+	}
+
+	condition = 0;
+
+	free(line);
 	destroyLock();
 	
 	return 0;

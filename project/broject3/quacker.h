@@ -36,7 +36,7 @@ pthread_t cleanThread;
 
 pthread_mutex_t mylock[NUMPROXIES]; // = PTHREAD_MUTEX_INITIALIZER;
 
-int initPool(threadPool myPool);
+int initPool(threadPool *myPool);
 
 int initLock();
 
