@@ -24,14 +24,10 @@ topicStore TS;
 
 int initPool(threadPool *myPool) {
 	myPool->numFiles = 0;
-	//printf("here\n");
-	for (int i = 0; i < NUMPROXIES; i++) {
-		myPool->isFree[i] = 1;
-	}
 	return 1;
 }
 
-int initLock() {
+int initLock(pthread_mutex_t *mylock) {
 	for (int i = 0; i < NUMPROXIES; i++) {
 		pthread_mutexattr_t attr;
 	    pthread_mutexattr_init(&attr);
@@ -67,7 +63,6 @@ void *publisher(void *voidPool) {
 int pubParse(pthread_mutex_t mylock, char *filename) {
 	FILE *fpub;
 	char *line;
-	char *saveptr;
 	size_t len;
 	char *token;
 	int arg_ctr = 0;
@@ -86,10 +81,8 @@ int pubParse(pthread_mutex_t mylock, char *filename) {
 			arg_arr[i] = NULL;
 		}
 		arg_ctr = 0;
-		token = strtok_r(line, " \"\r\n", &saveptr);
-		while (token != NULL) {
+		while ((token = strtok_r(line, " \"\r\n", &line))) {
 			arg_arr[arg_ctr] = token;
-			token = strtok_r(NULL, " \"\r\n", &saveptr);
 			arg_ctr++;
 		}
 		if (strcmp(arg_arr[0], "stop") == 0) {
@@ -164,7 +157,6 @@ int subParse(pthread_mutex_t mylock, char *filename) {
 	char *line;
 	size_t len;
 	char *token;
-	char *saveptr;
 	int arg_ctr = 0;
 	char *arg_arr[128];
 	fsub = fopen(filename, "r");
@@ -186,10 +178,8 @@ int subParse(pthread_mutex_t mylock, char *filename) {
 			arg_arr[i] = NULL;
 		}
 		arg_ctr = 0;
-		token = strtok_r(line, " \"\r\n", &saveptr);
-		while (token != NULL) {
+		while ((token = strtok_r(line, " \"\r\n", &line))) {
 			arg_arr[arg_ctr] = token;
-			token = strtok_r(NULL, " \"\r\n", &saveptr);
 			arg_ctr++;
 		}
 		if (strcmp(arg_arr[0], "stop") == 0) {
@@ -245,8 +235,9 @@ int subParse(pthread_mutex_t mylock, char *filename) {
 	return 1;
 }
 
-void *clean(void *voidDelta) {
-	useconds_t *delta = (useconds_t *)voidDelta;
+void *clean(void *voidPool) {
+	cleanPool *clnPool = (cleanPool *) voidPool;
+	useconds_t delta = clnPool->delta;
 	struct timeval curr_time;
 	struct timeval lastclean;
 	double diff_t;
@@ -254,25 +245,21 @@ void *clean(void *voidDelta) {
 	gettimeofday(&lastclean, NULL);
 	int numEntries = 0;
 	int th_idx = 0;
-	int success = 0;
 	topicEntry myEntry;
 	while (condition) {
 		gettimeofday(&curr_time, NULL);
 		diff_t = difftime(curr_time.tv_sec, lastclean.tv_sec);
-		if (diff_t > *delta) {
+		if (diff_t > delta) {
 			gettimeofday(&lastclean, NULL);
 			for (int i = 0; i < TS.numTopics; i++) {
 				numEntries = TS.topics[i].tail - TS.topics[i].head + 1;
 				for (int j = 0; j < numEntries; j++) {
 					gettimeofday(&curr_time, NULL);
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
-					if (diff_t > *delta) {
-						for (int i = 0; i < NUMPROXIES; i++) {
-							pthread_mutex_lock(&mylock[th_idx]);
-							success = dequeue(&myEntry, &TS.topics[i]);
-							pthread_mutex_unlock(&mylock[th_idx]);
-							if (success) break;
-						}
+					if (diff_t > delta) {
+						pthread_mutex_lock(&mylock[th_idx]);
+						dequeue(&myEntry, &TS.topics[i]);
+						pthread_mutex_unlock(&mylock[th_idx]);
 					}
 					// If we hit an entry that's not old enough, all entries after that aren't either
 					else {
@@ -290,14 +277,18 @@ void *clean(void *voidDelta) {
 
 int createPubs(threadPool *pubPool) {
 	for (int i = 0; i < NUMPROXIES; i++) {
-		pthread_create(&pubPool->threads[i], NULL, &publisher, (void *) &pubPool);
+		if (pubPool->isFree[i] == 1) {
+			pthread_create(&pubPool->threads[i], NULL, &publisher, (void *) &pubPool);
+		}
 	}
 	return 1;
 }
 
 int createSubs(threadPool *subPool) {
 	for (int i = 0; i < NUMPROXIES; i++) {
-		pthread_create(&subPool->threads[i], NULL, &publisher, (void *) &subPool);
+		if (subPool->isFree[i] == 1) {
+			pthread_create(&subPool->threads[i], NULL, &publisher, (void *) &subPool);
+		}
 	}
 	return 1;
 }
@@ -309,7 +300,7 @@ int joinPool(threadPool *pool) {
 	return 1;
 }
 
-int destroyLock() {
+int destroyLock(pthread_mutex_t *mylock) {
 	for (int i = 0; i < NUMPROXIES; i++) {
 		pthread_mutex_destroy(&mylock[i]);
 	}
@@ -320,9 +311,8 @@ int main(int argc, char const *argv[])
 {
 	// read file / getline variables
 	FILE *fp;
-	char *saveptr;
-	size_t len = 256;
-	char *line = (char *)malloc(len * sizeof(char));
+	char *line;
+	size_t len;
 	char *token;
 	int arg_ctr = 0;
 	char *arg_arr[128];
@@ -338,16 +328,14 @@ int main(int argc, char const *argv[])
 	int topicID;
 	char topicName[NAMESIZE];
 	int queueLen;
-	char *fname = NULL; 
-	int delta_t;
 
 	TS.numTopics = 0;
 
-	threadPool *pubPool = (threadPool *)malloc(sizeof(threadPool)); 
-	threadPool *subPool = (threadPool *)malloc(sizeof(threadPool));
+	threadPool *pubPool, *subPool;
+	cleanPool *clnPool;
 	initPool(pubPool);
     initPool(subPool);
-    initLock();
+    initLock(mylock);
 
 	while (getline(&line, &len, fp) != EOF) {
 		// clean up arg_arr in each iteration 
@@ -355,16 +343,11 @@ int main(int argc, char const *argv[])
 			arg_arr[i] = NULL;
 		}
 		arg_ctr = 0;
-		token = strtok_r(line, " \"\r\n", &saveptr);
-		while (token != NULL) {
+		while ((token = strtok_r(line, " \"\r\n", &line))) {
 			arg_arr[arg_ctr] = token;
-			token = strtok_r(NULL, " \"\r\n", &saveptr);
 			arg_ctr++;
 		}
-		for (int i = 0; i < arg_ctr; i++) {
-			printf("arg_arr[%d]: %s  ", i, arg_arr[i]);
-		}
-		printf("\n");
+
 		if (strcmp(arg_arr[0], "create") == 0 && strcmp(arg_arr[1], "topic") == 0) {
 			sscanf(arg_arr[2], "%d", &topicID);
 			sscanf(arg_arr[4], "%d", &queueLen);
@@ -402,18 +385,11 @@ int main(int argc, char const *argv[])
 		}
 		else if (strcmp(arg_arr[0], "add") == 0) {
 			if (strcmp(arg_arr[1], "publisher") == 0 && pubPool->numFiles <= MAXPUBS) {
-				// fname = (char *)malloc(FILENAME_MAX*sizeof(char));
-				// strcpy(fname, arg_arr[2]);
-				// pubPool->filename[pubPool->numFiles] = fname;
 				strcpy(pubPool->filename[pubPool->numFiles], arg_arr[2]);
 				pubPool->numFiles++;
-				// free(fname);
 				printf("Publisher <%d> to be read from <%s> added!\n", pubPool->numFiles, arg_arr[2]);
 			}
 			else if (strcmp(arg_arr[1], "subscriber") == 0 && subPool->numFiles <= MAXSUBS) {
-				// fname = (char *)malloc(FILENAME_MAX*sizeof(char));
-				// strcpy(fname, arg_arr[2]);
-				// subPool->filename[subPool->numFiles] = fname;
 				strcpy(subPool->filename[subPool->numFiles], arg_arr[2]);
 				subPool->numFiles++;
 				printf("Subscriber <%d> to be read from <%s> added!\n", subPool->numFiles, arg_arr[2]);
@@ -423,35 +399,26 @@ int main(int argc, char const *argv[])
 				// exit(EXIT_FAILURE);
 			}
 		}
-		else if (strcmp(arg_arr[0], "delta") == 0) {
-			sscanf(arg_arr[1], "%d", &delta_t);
+		else if (strcpy(arg_arr[0], "delta") == 0) {
+			sscanf(arg_arr[1], "%d", &clnPool->delta);
 		}
-		else if (strcmp(arg_arr[0], "start") == 0) {
-			printf("Program starting...\n");
-			// fclose(fp);
+		else if (strcpy(arg_arr[0], "start") == 0) {
+			fclose(fp);
 			break;
 		}
 		else {
 			fprintf(stderr, "Error! Unsupport arguments\n");
 			// exit(EXIT_FAILURE);
-		}
-		printf("-------------------------------------\n");
+		}		
 	}
-	fclose(fp);
-
-	pthread_t cleanThread;
-	pthread_create(&cleanThread, NULL, &clean, (void *) &delta_t);
-
+	pthread_create(&clnPool->thread, NULL, &clean, (void *) &clnPool);
 	createPubs(pubPool);
 	createSubs(subPool);
 
 	joinPool(pubPool);
 	joinPool(subPool);
 
-	destroyLock();
-
-	free(pubPool);
-	free(subPool);
+	destroyLock(mylock);
 	
 	return 0;
 }
