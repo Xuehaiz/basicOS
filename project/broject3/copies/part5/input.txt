@@ -1,0 +1,12 @@
+create topic 12 breakfast 3
+query topics
+add publisher publisher1.txt
+query publishers
+add publisher publisher2.txt
+query publishers
+add subscriber subscriber1.txt
+query subscribers
+add subscriber subscriber2.txt
+query subscribers
+delta 2
+start

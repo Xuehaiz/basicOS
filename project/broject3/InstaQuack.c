@@ -18,16 +18,6 @@ void initialize() { // int qID
 }
 
 
-struct topicEntry TE_create(char* photoURL, char* photoCaption) {  // int pubID, int entryNum, 
-	struct topicEntry temp; // = (struct topicEntry *)malloc(sizeof(struct topicEntry));
-	//temp.entryNum = entryNum;
-	temp.pubID = 0;
-	strcpy(temp.photoURL, photoURL);
-	strcpy(temp.photoCaption, photoCaption);
-	return temp;
-} 
-
-
 int enqueue(int TQ_ID, struct topicEntry TE) {
 	for (int i = 0; i < MAXQUEUES; i++) {
 		if (queues[i].qID == TQ_ID) {
@@ -84,20 +74,6 @@ int dequeue(int TQ_ID, struct topicEntry *TE) {
 			}
 			return 1;
 		}
-	}
-	return 0;
-}
-
-
-int isEmpty() {
-	int empty = 0;
-	for (int i = 0; i < MAXQUEUES; i++) {
-		if (queues[i].head == queues[i].tail) {
-			empty++;
-		}
-	}
-	if (empty == MAXQUEUES) {
-		return 1;
 	}
 	return 0;
 }
@@ -160,140 +136,182 @@ int getEntry(int TQ_ID, int lastEntry, struct topicEntry *TE) {
 }
 
 
-void *publisher(void *pub_file) {
-	char *pubfile = (char *)pub_file;
+void *publisher(void *args) {
+	char *pubfile = ((struct Threads *) args)->filename;
 	FILE *fp;
 	fp = fopen(pubfile, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "publisher file open failure. \n");
+	}
 	char line[128];
 	char *token;
 	char *arg_arr[128];
-	int argv_1;
-	int count; 
+	int qID;
+	useconds_t sleep_t;
+	// int count = 0; 
 	int counter = 0;
 	while (fgets(line, 128, fp) != NULL) {
 		for (int i = 0; i < counter; i++) {
 			arg_arr[i] = NULL;
 		}
 		counter = 0;
-		token = strtok(line, " \"\n");
+		token = strtok(line, " \"\r\n");
 		while (token != NULL) {
 			arg_arr[counter] = token;
-			token = strtok(NULL, " \"\n");
+			token = strtok(NULL, " \"\r\n");
 			counter++;
 		}
-		if (arg_arr[1] != NULL) {
-			sscanf(arg_arr[1], "%d", &argv_1);
-		}
 		if (strcmp(arg_arr[0], "stop") == 0) {
+			fclose(fp);
+			((struct Threads *) args)->alive = 1;
 			break;
 		}
 		else if (strcmp(arg_arr[0], "sleep") == 0) {
-			double mili_sec = argv_1 / 1000000;
-			sleep(mili_sec);
+			sscanf(arg_arr[1], "%d", &sleep_t);
+			usleep(sleep_t);
 		}
 		else if (strcmp(arg_arr[0], "put") == 0) {
-			struct topicEntry TE = TE_create(arg_arr[2], arg_arr[3]);
-			pthread_mutex_lock(&(mutex[count]));
-			if (enqueue(argv_1, TE)) {
-				pthread_mutex_unlock(&(mutex[count]));
+			sscanf(arg_arr[1], "%d", &qID);
+			struct topicEntry TE;
+			strcpy(TE.photoURL, arg_arr[2]);
+			strcpy(TE.photoCaption, arg_arr[3]);
+			pthread_mutex_lock(&(mutex[qID]));
+			
+			while (!enqueue(qID, TE)) {
+				fprintf(stderr, "publisher <%d> - enqueue entry failure\n", qID);
+				usleep(500);
 			}
-			else {
-
-				fprintf(stdout, "subscriber %d: is empty, qID = %s\n", count, queues[argv_1].name);
-				pthread_mutex_unlock(&(mutex[count]));
-				sleep(1);
-			}
+			pthread_mutex_unlock(&(mutex[qID]));
+			printf("publisher <%d> - enqueue entry success\n", qID);
+			/*else {
+				pthread_mutex_unlock(&(mutex[qID]));
+				fprintf(stderr, "publisher <%d> - enqueue entry failure\n", qID);
+			}*/
 		}
 		else {
-			fprintf(stderr, "Cannot read publisher command\n");
+			fprintf(stderr, "Error! Publisher command does not recognize\n");
 			exit(EXIT_FAILURE);
 		}
-		count++;
+		sched_yield();
 	}
+	((struct Threads *) args)->alive = 1;
+	return NULL;
 }
 
 
-void *subscriber(void *sub_file) {
-	char *subfile = (char *)sub_file;
+void *subscriber(void *args) {
+	char *subfile = ((struct Threads *) args)->filename;
 	FILE *fp;
 	fp = fopen(subfile, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "subscriber file open failure. \n");
+	}
 	char line[128];
 	char *token;
 	char *arg_arr[128];
-	int argv_1;
+	int qID;
+	useconds_t sleep_t;
 	int counter = 0;
 	int count = 0;
 	struct topicEntry TE;
-	// pthread_self();
+	int lastEntry[MAXQUEUES];
+	for (int i = 0; i < MAXQUEUES; i++) {
+		lastEntry[i] = 0;
+	}
+
 	while (fgets(line, 128, fp) != NULL) {
 		for (int i = 0; i < counter; i++) {
 			arg_arr[i] = NULL;
 		}
 		counter = 0;
-		token = strtok(line, " \n");
+		token = strtok(line, " \r\n");
 		while (token != NULL) {
 			arg_arr[counter] = token;
-			token = strtok(NULL, " \n");
+			token = strtok(NULL, " \r\n");
 			counter++;
 		}
-		if (arg_arr[1] != NULL) {
-			sscanf(arg_arr[1], "%d", &argv_1);
-		}
-
 		if (strcmp(arg_arr[0], "stop") == 0) {
+			fclose(fp);
+			((struct Threads *) args)->alive = 1;
 			break;
 		}
 		else if (strcmp(arg_arr[0], "sleep") == 0) {
-			double mili_sec = argv_1 / 1000000;
-			sleep(mili_sec);
+			sscanf(arg_arr[1], "%d", &sleep_t);
+			usleep(sleep_t);
 		}
 		else if (strcmp(arg_arr[0], "get") == 0) {
-			pthread_mutex_lock(&(mutex[count]));
-			if (getEntry(argv_1, count, &TE)) {
-				pthread_mutex_unlock(&(mutex[count]));
+			printf("subs\n");
+			sscanf(arg_arr[1], "%d", &qID);
+			pthread_mutex_lock(&(mutex[qID]));
+			int entry = getEntry(qID, lastEntry[qID], &TE);
+			pthread_mutex_unlock(&(mutex[qID]));
+			if (entry == 1) {
+				printf("subscriber <%d> - get entry <%d> success\n", qID, TE.entryNum);
+				printf("Entry number <%d> - URL <%s> - Caption <%s>\n", TE.entryNum, TE.photoURL, TE.photoCaption);
+				lastEntry[qID]++; 
+			}
+			else if (entry > 1) {
+				printf("subscriber <%d> - get entry <%d> success\n", qID, TE.entryNum);
+				printf("Entry number <%d> - URL <%s> - Caption <%s>\n", TE.entryNum, TE.photoURL, TE.photoCaption);
+				lastEntry[qID] = entry;
 			}
 			else {
-				fprintf(stdout, "subscriber %d: is empty, qID = %s\n", count, queues[argv_1].name);
-				pthread_mutex_unlock(&(mutex[count]));
-				sleep(1);
+				fprintf(stdout, "subscriber <%d> - get entry failure\n", qID);
+				// sleep 500 ms if get entry failed
+				usleep(500);
 			}
 		}
 		else {
-			fprintf(stderr, "Cannot read subscriber command\n");
+			fprintf(stderr, "Error! Subscriber command does not recognize\n");
 			exit(EXIT_FAILURE);
 		}
-		count++;
+		sched_yield();
 	}
+	((struct Threads *) args)->alive = 1;
+	return NULL;
 }
 
 
-void cleanup(void *delta) {
-	time_t *delta_t = (time_t *) delta;
+void *cleanup() {  // void *delta
+	// time_t delta_t = (time_t) delta;
 	struct timeval curr_time;
+	struct timeval lastclean;
 	double diff_t;
 	struct topicEntry TE;
+	gettimeofday(&lastclean, NULL);
 	while (condition) {
-		for (int i = 0; i < MAXQUEUES; i++) {
-			for (int j = 0; j < MAXENTRIES; j++) {
-				gettimeofday(&curr_time, NULL);
-				diff_t = difftime(curr_time.tv_sec, queues[i].buffer[j].timeStamp.tv_sec);
-				if (diff_t > (double) delta_t) {
-					dequeue(queues[i].name, &TE);
-				}
-				// If we hit an entry that's not old enough, all entries after that aren't either
-				else {
-					break; 
+		gettimeofday(&curr_time, NULL);
+		diff_t = difftime(curr_time.tv_sec, lastclean.tv_sec);
+		if (diff_t > queues[0].age) {
+			gettimeofday(&lastclean, NULL);
+			for (int i = 0; i < MAXQUEUES; i++) {
+				for (int j = 0; j < MAXENTRIES; j++) {
+					gettimeofday(&curr_time, NULL);
+					diff_t = difftime(curr_time.tv_sec, queues[i].buffer[j].timeStamp.tv_sec);
+					if (diff_t > queues[i].age) {  // (double) delta_t
+						pthread_mutex_lock(&mutex[i]);
+						dequeue(queues[i].qID, &TE);  // deciption 
+						pthread_mutex_unlock(&mutex[i]);
+					}
+					else {
+						// If we hit an entry that's not old enough, all entries after that aren't either
+						break; 
+					}
+					
 				}
 			}
 		}
+		else {
+			sched_yield();
+		}
 	}
+	return NULL;
 }
 
 
 int main(int argc, char const *argv[])
 {
-	int numpubs = 10;
-	int numsubs = 10;
+	int numtopics = 0;
 
 	int counter = 0;
 	char line[128];
@@ -301,31 +319,46 @@ int main(int argc, char const *argv[])
 	char *arg_arr[128];
 	int argv_1;
 
-	char *pubfile, *subfile;
-
-	int numtopics = 0;
 	int qID; 
+	int pub_idx = 0;
+	int sub_idx = 0;
+	int pub_count = 0;
+	int sub_count = 0;
+
+	// initialize pools 
+	for (int i = 0; i < NUMPROXIES; i++) {
+		pubs[i].alive = 1;
+		subs[i].alive = 1;
+	}
 
 	FILE *fp = fopen(argv[1], "r");
-	FILE *fpub, *fsub;
-	time_t delta_t;
 	if (fp == NULL) {
 		fprintf(stderr, "File <%s> open failure.\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
 
+	// create clean-up thread 
+	pthread_create(&cleanThread, NULL, cleanup, NULL);  // (void *) &delta_t
+	
 	while (fgets(line, 128, fp) != NULL) {
 		// clean up arg_arr in each iteration 
 		for (int i = 0; i < counter; i++) {
 			arg_arr[i] = NULL;
 		}
 		counter = 0;
-		token = strtok(line, " \"\n");
+		token = strtok(line, " \"\r\n");
 		while (token != NULL) {
 			arg_arr[counter] = token;
-			token = strtok(NULL, " \"\n");
+			token = strtok(NULL, " \"\r\n");
 			counter++;
 		}
+
+		/*for (int i = 0; i < counter; i++) {
+			printf("arg_arr[%d]: <%s>;   ", i, arg_arr[i]);
+		}
+		// break;
+		printf("\n");*/
+
 		if (strcmp(arg_arr[0], "create") == 0 && strcmp(arg_arr[1], "topic") == 0) {
 			sscanf(arg_arr[2], "%d", &qID);
 			queues[numtopics].qID = qID;
@@ -337,17 +370,27 @@ int main(int argc, char const *argv[])
 			numtopics++;
 		}
 		else if (strcmp(arg_arr[0], "query") == 0) {
+			// printf("strcmp: %d\n", strcmp("topics", arg_arr[1]));
 			if (strcmp(arg_arr[1], "topics") == 0) {
-				for (int i = 0; i < MAXQUEUES; i++) {
-					printf("topic ID: %d, topic length: %d\n",
-					queues[i].qID, queues[i].length);
+				printf("query topic ...\n");
+				for (int i = 0; i < numtopics; i++) {
+					printf("Topic name <%s>, ID: <%d>, length: <%d>\n",
+						queues[i].name, 
+						queues[i].qID, 
+						queues[i].length);
 				}
 			}
 			else if (strcmp(arg_arr[1], "publishers") == 0) {
-
+				printf("query publishers ...\n");
+				printf("current publisher: <%d> - command file: <%s>\n", 
+					pub_count, 
+					pubs[pub_idx].filename);
 			}
 			else if (strcmp(arg_arr[1], "subscribers") == 0) {
-
+				printf("query subscribers ...\n");
+				printf("current subscriber: <%d> - command file: <%s>\n",
+					sub_count,
+					subs[sub_idx].filename);
 			} 
 			else {
 				fprintf(stderr, "Error! Can't query %s\n", arg_arr[1]);
@@ -355,13 +398,46 @@ int main(int argc, char const *argv[])
 			}
 		}
 		else if (strcmp(arg_arr[0], "add") == 0) {
-			if (strcmp(arg_arr[1], "publishers")) {
-				//fpub = fopen(arg_arr[2], "r");
-				pubfile = arg_arr[2];
+			if (strcmp(arg_arr[1], "publisher") == 0) {
+				// find a free thread 
+				int iter = 0;
+				while (TRUE) {
+					if (iter >= MAXPUBS) {
+						iter = 0;
+					}
+					if (pubs[iter].alive == 1) {
+						pub_idx = iter;
+						break;
+					}
+					iter++;
+				}
+				pubs[pub_idx].tid = pub_idx;
+				pubs[pub_idx].alive = 0;
+				pubs[pub_idx].accumulator = pub_count;
+				strcpy(pubs[pub_idx].filename, arg_arr[2]);
+				pthread_attr_init(&attr);
+				pthread_create(&pubs[pub_idx].th, &attr, publisher, (void *) &pubs[pub_idx]);
+				pub_count++;
 			}
-			else if (strcmp(arg_arr[1], "subscribers")){
-				//fsub = fopen(arg_arr[2], "r");
-				subfile = arg_arr[2];
+			else if (strcmp(arg_arr[1], "subscriber") == 0) {
+				int iter = 0;
+				while (TRUE) {
+					if (iter >= MAXSUBS) {
+						iter = 0;
+					}
+					if (subs[iter].alive == 1) {
+						sub_idx = iter;
+						break;
+					}
+					iter++;
+				}
+				subs[sub_idx].tid = sub_idx;
+				subs[sub_idx].alive = 0;
+				subs[sub_idx].accumulator = sub_count;
+				strcpy(subs[sub_idx].filename, arg_arr[2]);
+				pthread_attr_init(&attr);
+				pthread_create(&subs[sub_idx].th, &attr, subscriber, (void *) &subs[sub_idx]);
+				sub_count++;
 			}
 			else {
 				fprintf(stderr, "Error! Can't add %s\n", arg_arr[1]);
@@ -370,46 +446,50 @@ int main(int argc, char const *argv[])
 		}
 		else if (strcmp(arg_arr[0], "delta") == 0) {
 			sscanf(argv[1], "%d", &argv_1);
-			delta_t = argv_1;
+			time_t delta_t = argv_1;
+			for (int i = 0; i < MAXQUEUES; i++) {
+				queues[i].age = delta_t;
+			}
 		}
 		else if (strcmp(arg_arr[0], "start") == 0) {
+			fclose(fp);
 			break;
 		}
 		else {
-			fprintf(stderr, "Error! Doesn't recognize input command\n");
+			fprintf(stderr, "Error! Unsupport arguments\n");
 			exit(EXIT_FAILURE);
 		}
+		// printf("here\n");
 	}
-
-	// initialize();
-
-	for (int i = 0; i < MAXPUBS; i++) {
-		// sprintf(pubargs[i].name, "%d", i);
-		pthread_create(&pubs[i], &attr, publisher, (void *) &pubfile);
-	}
-
-	for(int i = 0; i < MAXSUBS; i++) {
-    	// sprintf(subargs[i].name, "%d", i);
-    	pthread_create(&subs[i], &attr, subscriber, (void *) &subfile);
-  	}
-
 
   	// join
   	for (int i = 0; i < MAXPUBS; i++) {
-  		if (pthread_join(pubs[i], NULL) != 0) {
+  		if (pthread_join(pubs[i].th, NULL) != 0) {
   			fprintf(stderr, "pubs[%d] thread join failure\n", i);
-  			exit(EXIT_FAILURE);
+  			// exit(EXIT_FAILURE);
+  		}
+  		else {
+  			printf("pubs[%d] thread join succeed\n", i);
   		}
   	}
 
   	for (int i = 0; i < MAXSUBS; i++) {
-  		if (pthread_join(subs[i], NULL) != 0) {
+  		if (pthread_join(subs[i].th, NULL) != 0) {
   			fprintf(stderr, "subs[%d] thread join failure\n", i);
-  			exit(EXIT_FAILURE);
+  			// exit(EXIT_FAILURE);
+  		}
+  		else {
+  			printf("subs[%d] thread join succeed\n", i);
   		}
   	}
 
-  	// condition = 0;
+  	condition = 0;
+
+  	pthread_join(cleanThread, NULL);
+
+  	for (int i = 0; i < MAXQUEUES; i++) {
+  		pthread_mutex_destroy(&(mutex[i]));
+  	}
 
 	return 0;
 }

@@ -1,0 +1,1 @@
+printf("Entry number <%d> - URL <%s> - Caption <%s>\n", TE.entryNum, TE.photoURL, TE.photoCaption);
