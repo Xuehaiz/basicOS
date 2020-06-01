@@ -32,6 +32,8 @@ struct topicQueue {
 	int length;
 	time_t age;
 	int counter;
+	int isfull;
+	int isempty;
 } topicQueue;
 
 struct Threads {
@@ -75,7 +77,7 @@ void *publisher(void *pub_file);
 
 void *subscriber(void *sub_file);
 
-void *cleanup(void *delta);
+void *cleanup(); // void *delta
 
 #endif
 

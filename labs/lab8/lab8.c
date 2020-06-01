@@ -23,6 +23,8 @@ struct MTQ {
 	int tail;
 	int length;
 	int counter;
+	int isfull;
+	int isempty;
 };
 
 struct MTQ registry[MAXQUEUES];
@@ -36,6 +38,8 @@ void initialize() {
 		registry[i].tail = 0;
 		registry[i].counter = 0;
 		registry[i].length = NUMTICKET;
+		registry[i].isfull = 0;
+		registry[i].isempty = 0;
 	}
 }
 
@@ -49,21 +53,30 @@ struct mealTicket MT_create(int ticketNum, char *dish) {
 int enqueue(char *MTQ_ID, struct mealTicket MT) {
 	for (int i = 0; i < MAXQUEUES; i++) {
 		if (strcmp(MTQ_ID, registry[i].name) == 0) {
-			if ((registry[i].tail - registry[i].head) == -1) {
+			if (registry[i].isfull) {  // isfull
 				return 0;
 			}
-			if (registry[i].buffer[registry[i].tail].ticketNum != -1) {
-				MT.ticketNum = registry[i].counter;
-				registry[i].counter++;
-				registry[i].buffer[registry[i].tail] = MT;
-				if (registry[i].tail == registry[i].length) {
-					registry[i].tail = 0;
+			// if (registry[i].buffer[registry[i].tail].ticketNum != -1) {
+			MT.ticketNum = registry[i].counter;
+			registry[i].counter++;
+			registry[i].isempty = 0;
+			registry[i].buffer[registry[i].tail] = MT;
+			if (registry[i].tail + 1 == registry[i].length) {
+				registry[i].tail++;
+				if (registry[i].tail == registry[i].head) {
+					registry[i].isfull = 1;
 				}
-				else {
-					registry[i].tail++;
-				}
-				return 1;
+				registry[i].tail = 0;
 			}
+			else {
+				registry[i].tail++;
+				printf("Enqueueeeeeeee head : %d, tail: %d\n", registry[i].head, registry[i].tail);
+			}
+			if (registry[i].tail == registry[i].head) {
+				registry[i].isfull = 1;
+			}
+			return 1;
+			// }
 		}
 	}
 	return 0;
@@ -72,24 +85,38 @@ int enqueue(char *MTQ_ID, struct mealTicket MT) {
 int dequeue(char *MTQ_ID, struct mealTicket *MT) { // int ticketNum,
 	for (int i = 0; i < MAXQUEUES; i++) {
 		if (strcmp(MTQ_ID, registry[i].name) == 0) {
-			if (registry[i].head == registry[i].tail) {
+			printf("Dequeue ----head : %d, tail: %d\n", registry[i].head, registry[i].tail);
+			if (registry[i].isempty) {  // is empty 
 				return 0;
 			}
+			printf("Dequeue ticketNum: %d\n", registry[i].buffer[registry[i].head].ticketNum);
 			MT->ticketNum = registry[i].buffer[registry[i].head].ticketNum;
 			//printf("here\n");
 			strcpy(MT->dish, registry[i].buffer[registry[i].head].dish);
-
+			registry[i].isfull = 0;
 			registry[i].buffer[registry[i].head].ticketNum = -1;
-			if (registry[i].head == registry[i].length) {
+			printf("-----------------------\n");
+			for (int k = 0; k < NUMTICKET; k++) {
+				printf("ticket Number: %d\n", registry[i].buffer[k].ticketNum);
+			}
+			printf("-----------------------\n");
+			if (registry[i].head + 1 == registry[i].length) {
+				registry[i].head++;
+				if (registry[i].tail == registry[i].head) {
+					registry[i].isempty = 1;
+				}
 				registry[i].head = 0;
 			}
 			else {
 				registry[i].head++;
 			}
+			if (registry[i].tail == registry[i].head) {
+					registry[i].isempty = 1;
+			}
 			return 1;
 		}
 	}
-	return 0;
+	return 2;
 }
 
 int isEmpty() {
@@ -134,121 +161,84 @@ int main(int argc, char const *argv[])
 	}
 
 
-	enqueue_check = enqueue("Lunch", mt1);
-	if (!enqueue_check) {
-		fprintf(stderr, "Lunch enqueue Sandwich failed\n");
-	}
-	enqueue_check = enqueue("Lunch", mt2);
-	if (!enqueue_check) {
-		fprintf(stderr, "Lunch enqueue Hamburger failed\n");
-	}
-	enqueue_check = enqueue("Lunch", mt3);
-	if (!enqueue_check) {
-		fprintf(stderr, "Lunch enqueue Mac-n-cheese failed\n");
-	}
+	printf("======================================================\n");
 
+	for (int i = 0; i < NUMTICKET; i++) {
+		printf("registry[0].buffer[%d].ticketNum: %d   dish: %s, isfull: %d\n", 
+			i, registry[0].buffer[i].ticketNum, registry[0].buffer[i].dish, registry[0].isfull);
+	}
+	printf("======================================================\n");
 
-	enqueue_check = enqueue("Dinner", mt1);
-	if (!enqueue_check) {
-		fprintf(stderr, "Dinner enqueue Sandwich failed\n");
-	}
-	enqueue_check = enqueue("Dinner", mt2);
-	if (!enqueue_check) {
-		fprintf(stderr, "Dinner enqueue Hamburger failed\n");
-	}
-	enqueue_check = enqueue("Dinner", mt3);
-	if (!enqueue_check) {
-		fprintf(stderr, "Dinner enqueue Mac-n-cheese failed\n");
-	}
-
-
-	enqueue_check = enqueue("Bar", mt1);
-	if (!enqueue_check) {
-		fprintf(stderr, "Bar enqueue Sandwich failed\n");
-	}
-	enqueue_check = enqueue("Bar", mt2);
-	if (!enqueue_check) {
-		fprintf(stderr, "Bar enqueue Hamburger failed\n");
-	}
-	enqueue_check = enqueue("Bar", mt3);
-	if (!enqueue_check) {
-		fprintf(stderr, "Bar enqueue Mac-n-cheese failed\n");
-	}
-
-	// Check: enqueue when a queue is full
-	enqueue_check = enqueue("Bar", mt3);
-	if (enqueue_check) {
-		fprintf(stderr, "Enqueue when a queue is full\n");
-		fprintf(stderr, "Test Case: C - Result: Success\n");
-	}
-
-	printf("\n");
-
-	for (int i = 0; i < MAXQUEUES; i++) {
-		for (int j = 0; j < NUMTICKET; j++) {
-			printf("%s %s %d\n", registry[i].name, registry[i].buffer[j].dish, registry[i].buffer[j].ticketNum);
-		}
-	}
 
 	struct mealTicket MT;
 	int dequeue_check = 0;
 	int first = 0;
-	while (TRUE) {
 
-		if (isEmpty()) break;
+	for (int i = 0; i < NUMTICKET; i++) {
 		dequeue_check = dequeue("Breakfast", &MT);
-		//printf("here\n");
-		if (dequeue_check && first == 0) {
-			printf("Dequeue when a queue is full\n");
-			printf("Test Case: B - Result: Success\n");
-		}
-
+		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 		if (dequeue_check) {
+			printf("DeQueue: Breakfast - Ticket Number: %d - Dish: %s\n", MT.ticketNum, MT.dish);
+		}
+		else {
+			printf("Dequeue when the queue is empty, failed.\n");
+		}
+		printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+	}
+
+	// check Dequeue when a queue is empty
+/*	dequeue_check = dequeue("Breakfast", &MT); 
+	if (dequeue_check) {
 			printf("Queue: Breakfast - Ticket Number: %d - Dish: %s\n", MT.ticketNum, MT.dish);
-		}
-		else {
-			printf("Dequeue when the queue is empty, failed.\n");
-		}
+	}
+	else {
+		printf("\n");
+		printf("Check: Dequeue when a queue is empty\n");
+		printf("Test Case: A - Result: Success\n");
+		printf("\n");
+	}*/
 
-		dequeue_check = dequeue("Lunch", &MT);
+
+	enqueue_check = enqueue("Breakfast", mt1);
+	if (!enqueue_check) {
+		fprintf(stderr, "Breakfast enqueue Sandwich failed\n");
+	}
+	else {
+		printf("Enqueue Sandwich Success!!! ticketNum: %d\n", registry[0].buffer[0].ticketNum);
+	}
+	enqueue_check = enqueue("Breakfast", mt2);
+	if (!enqueue_check) {
+		fprintf(stderr, "Breakfast enqueue Hamburger failed\n");
+	}
+	else {
+		printf("Enqueue Hamburger Success!!! ticketNum: %d\n", registry[0].buffer[1].ticketNum);
+	}
+	enqueue_check = enqueue("Breakfast", mt3);
+	if (!enqueue_check) {
+		fprintf(stderr, "Breakfast enqueue Mac-n-cheese failed\n");
+	}
+	else {
+		printf("Enqueue Mac-n-cheese Success!!! ticketNum: %d\n", registry[0].buffer[2].ticketNum);
+	}
+
+
+	for (int i = 0; i < NUMTICKET; i++) {
+		printf("registry[0].buffer[%d].ticketNum: %d   dish: %s, isfull: %d,  isEmpty: %d\n",
+			i, registry[0].buffer[i].ticketNum, registry[0].buffer[i].dish, registry[0].isfull, registry[0].isempty);
+	}
+
+	for (int i = 0; i < NUMTICKET; i++) {
+		dequeue_check = dequeue("Breakfast", &MT);
+		printf("dequeue ret: %d\n", dequeue_check);
 		if (dequeue_check) {
-			printf("Queue: Lunch - Ticket Number: %d - Dish: %s\n", MT.ticketNum, MT.dish);
-		}
-		else {
-			printf("Dequeue when the queue is empty, failed.\n");
-		}
-		
-		dequeue_check = dequeue("Dinner", &MT);
-		if (dequeue_check) {
+			printf("isempty::::::: %d\n", registry[0].isempty);
 			printf("Queue: Dinner - Ticket Number: %d - Dish: %s\n", MT.ticketNum, MT.dish);
 		}
 		else {
 			printf("Dequeue when the queue is empty, failed.\n");
 		}
-		
-		dequeue_check = dequeue("Bar", &MT);
-		if (dequeue_check) {
-			printf("Queue: Bar - Ticket Number: %d - Dish: %s\n", MT.ticketNum, MT.dish);
-		}
-		else {
-			printf("Dequeue when the queue is empty, failed.\n");
-			
-		}
-
-		printf("\n");
-		first++;
-
 	}
-
-	// check Dequeue when a queue is empty
-	dequeue_check = dequeue("Breakfast", &MT); 
-	if (dequeue_check) {
-			printf("Queue: Breakfast - Ticket Number: %d - Dish: %s\n", MT.ticketNum, MT.dish);
-	}
-	else {
-		printf("Check: Dequeue when a queue is empty\n");
-		printf("Test Case: A - Result: Success\n");
-	}
+	printf("isempty::::::: %d\n", registry[0].isempty);
 	// free(MT);
 /*	free(mt1);
 	free(mt2);
