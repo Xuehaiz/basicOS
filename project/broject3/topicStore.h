@@ -13,20 +13,18 @@
 #define TOPICSTORE_H_
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <pthread.h>
-#include <sys/time.h>
 
-#define URLSIZE 256
-#define CAPSIZE 256
 #define NAMESIZE 20
 #define MAXENTRIES 100
 #define MAXTOPICS 20
+#define URLSIZE 256
+#define CAPSIZE 256
 
 typedef struct topicEntry {
     int entryNum;
     struct timeval timeStamp;
-    int pubID;
+    long int pubID;
     char photoURL[URLSIZE]; // URL to photo
     char photoCaption[CAPSIZE]; // photo caption
 } topicEntry;
@@ -39,6 +37,8 @@ typedef struct topicQueue {
     topicEntry buffer[MAXENTRIES];
     int head;
     int tail;
+    int isfull;
+    int isempty;
     pthread_mutex_t mylock;
 } topicQueue;
 
@@ -46,4 +46,16 @@ typedef struct topicStore {
     int numTopics;
     topicQueue topics[MAXTOPICS];
 } topicStore;
+
+topicEntry initEntry(int pubID, char *photoURL, char *photoCaption);
+
+int initQueue(int qid, char *name, int len, topicQueue *myQueue);
+
+int enqueue(topicEntry *newEntry, topicQueue *TQ);
+
+int dequeue(topicEntry *TE, topicQueue *TQ);
+
+int getEntry(int lastEntry, topicQueue *TQ, topicEntry *TE);
+
+#endif
 

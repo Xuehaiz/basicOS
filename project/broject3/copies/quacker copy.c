@@ -24,9 +24,6 @@ topicStore TS;
 
 int initPool(threadPool *myPool) {
 	myPool->numFiles = 0;
-	for (int i = 0; i < NUMPROXIES; i++) {
-		myPool->isFree[i] = 1;
-	}
 	return 1;
 }
 
@@ -280,14 +277,18 @@ void *clean(void *voidPool) {
 
 int createPubs(threadPool *pubPool) {
 	for (int i = 0; i < NUMPROXIES; i++) {
+		if (pubPool->isFree[i] == 1) {
 			pthread_create(&pubPool->threads[i], NULL, &publisher, (void *) &pubPool);
+		}
 	}
 	return 1;
 }
 
 int createSubs(threadPool *subPool) {
 	for (int i = 0; i < NUMPROXIES; i++) {
-		pthread_create(&subPool->threads[i], NULL, &publisher, (void *) &subPool);
+		if (subPool->isFree[i] == 1) {
+			pthread_create(&subPool->threads[i], NULL, &publisher, (void *) &subPool);
+		}
 	}
 	return 1;
 }
