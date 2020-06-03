@@ -30,7 +30,7 @@ int enqueue(int TQ_ID, struct topicEntry TE) {
 				queues[i].isempty = 0;
 				queues[i].buffer[queues[i].tail] = TE;
 				gettimeofday(&(queues[i].buffer[queues[i].tail].timeStamp), NULL);
-				if (queues[i].tail == queues[i].length) {
+				if (queues[i].tail + 1 == queues[i].length) {
 					queues[i].tail++;
 					if (queues[i].tail == queues[i].head) {
 						queues[i].isfull = 1;
@@ -75,7 +75,7 @@ int dequeue(int TQ_ID, struct topicEntry *TE) {
 			queues[i].buffer[queues[i].head].entryNum = -1;
 
 			// increment the head
-			if (queues[i].head == queues[i].length) {
+			if (queues[i].head + 1 == queues[i].length) {
 				queues[i].head++;
 				if (queues[i].tail == queues[i].head) {
 					queues[i].isempty = 1;
@@ -194,11 +194,11 @@ void *publisher(void *args) {
 			pthread_mutex_lock(&(mutex[qID]));
 			
 			while (!enqueue(qID, TE)) {
-				fprintf(stderr, "publisher <%d> - enqueue entry failure\n", qID);
+				fprintf(stderr, "publisher <%ld> - enqueue entry failure\n", pthread_self());
 				usleep(500);
 			}
 			pthread_mutex_unlock(&(mutex[qID]));
-			printf("publisher <%d> - enqueue entry success\n", qID);
+			printf("publisher <%ld> - enqueue entry success\n", pthread_self());
 			/*else {
 				pthread_mutex_unlock(&(mutex[qID]));
 				fprintf(stderr, "publisher <%d> - enqueue entry failure\n", qID);
@@ -256,23 +256,22 @@ void *subscriber(void *args) {
 			usleep(sleep_t);
 		}
 		else if (strcmp(arg_arr[0], "get") == 0) {
-			printf("subs\n");
 			sscanf(arg_arr[1], "%d", &qID);
 			pthread_mutex_lock(&(mutex[qID]));
 			int entry = getEntry(qID, lastEntry[qID], &TE);
 			pthread_mutex_unlock(&(mutex[qID]));
 			if (entry == 1) {
-				printf("subscriber <%d> - get entry <%d> success\n", qID, TE.entryNum);
+				printf("subscriber <%ld> - get entry <%d> success\n", pthread_self(), TE.entryNum);
 				printf("Entry number <%d> - URL <%s> - Caption <%s>\n", TE.entryNum, TE.photoURL, TE.photoCaption);
 				lastEntry[qID]++; 
 			}
 			else if (entry > 1) {
-				printf("subscriber <%d> - get entry <%d> success\n", qID, TE.entryNum);
+				printf("subscriber <%ld> - get entry <%d> success\n", pthread_self(), TE.entryNum);
 				printf("Entry number <%d> - URL <%s> - Caption <%s>\n", TE.entryNum, TE.photoURL, TE.photoCaption);
 				lastEntry[qID] = entry;
 			}
 			else {
-				fprintf(stdout, "subscriber <%d> - get entry failure\n", qID);
+				fprintf(stdout, "subscriber <%ld> - get entry failure\n", pthread_self());
 				// sleep 500 ms if get entry failed
 				usleep(500);
 			}
@@ -306,7 +305,9 @@ void *cleanup() {  // void *delta
 					diff_t = difftime(curr_time.tv_sec, queues[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > queues[i].age) {  // (double) delta_t
 						pthread_mutex_lock(&mutex[i]);
-						dequeue(queues[i].qID, &TE);  // deciption 
+						if (dequeue(queues[i].qID, &TE)) {
+							printf("Cleanup thread <%ld> dequeued entry <%d>\n", pthread_self(), queues[i].buffer[j].entryNum);
+						}  
 						pthread_mutex_unlock(&mutex[i]);
 					}
 					else {
@@ -354,7 +355,8 @@ int main(int argc, char const *argv[])
 	}
 
 	// create clean-up thread 
-	pthread_create(&cleanThread, NULL, cleanup, NULL);  // (void *) &delta_t
+	pthread_attr_init(&attr);
+	pthread_create(&cleanThread, &attr, cleanup, NULL);  // (void *) &delta_t
 	
 	while (fgets(line, 128, fp) != NULL) {
 		// clean up arg_arr in each iteration 

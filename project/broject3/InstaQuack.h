@@ -12,8 +12,8 @@
 #define NAMESIZE 20
 #define URLSIZE 30
 #define CAPSIZE 30
-#define MAXPUBS	2
-#define MAXSUBS	2	
+#define MAXPUBS	3
+#define MAXSUBS	3
 #define TRUE 1	
 
 struct topicEntry {

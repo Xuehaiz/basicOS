@@ -1,3 +1,8 @@
+<<<<<<< HEAD:project/broject3/copies/Quacker.c
+=======
+
+
+>>>>>>> 83bacb8da8442eb71e9d29969c15e0596ab0ef4c:project/broject3/copies/quacker.c
 #define _XOPEN_SOURCE 700
 
 #include <stdio.h>
@@ -499,7 +504,8 @@ void finishHTML(FILE *htmlptr) {
     return;
 }
 
-int quacker() {
+int main()  // int argc, char const *argv[]
+{
     int i;
 
     topics.numTopics = 0;

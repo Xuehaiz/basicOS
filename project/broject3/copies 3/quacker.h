@@ -25,18 +25,19 @@
 int condition = 1;
 
 typedef struct threadPool {
-    // int numFiles;
-    char filename[FILENAME_MAX];
-    int thread_idx;
-    pthread_t thread;
-    int isFree;
+	// file array
+    int numFiles;
+    char filename[MAXPUBS][FILENAME_MAX];
+    // mutex array
+    pthread_t threads[NUMPROXIES];
+    int isFree[NUMPROXIES];
 } threadPool;
 
 pthread_t cleanThread;
 
 pthread_mutex_t mylock[NUMPROXIES]; // = PTHREAD_MUTEX_INITIALIZER;
 
-int initPool(threadPool myPool);
+int initPool(threadPool *myPool);
 
 int initLock();
 
@@ -50,7 +51,11 @@ int subParse(pthread_mutex_t mylock, char *filename);
 
 void *clean(void *voidPool);
 
-int joinPool(threadPool *myPool);
+int joinPool(threadPool *pool);
+
+int createSubs(threadPool *subPool);
+
+int createPubs(threadPool *pubPool);
 
 int destroyLock();
 

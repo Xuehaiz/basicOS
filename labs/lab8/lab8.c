@@ -240,12 +240,20 @@ int main(int argc, char const *argv[])
 	}
 	printf("isempty::::::: %d\n", registry[0].isempty);
 	// free(MT);
+<<<<<<< HEAD
+	free(mt1);
+=======
 /*	free(mt1);
+>>>>>>> 0e5a8868815c9af4e71210536066880ca4266a3e
 	free(mt2);
 	free(mt3);
 	for (int i = 0; i < MAXQUEUES; i++) {
 		free(registry[i].buffer);
+<<<<<<< HEAD
+	}
+=======
 	}*/
+>>>>>>> 0e5a8868815c9af4e71210536066880ca4266a3e
 
 	return 0;
 }

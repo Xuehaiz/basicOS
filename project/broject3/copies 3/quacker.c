@@ -22,9 +22,12 @@
 
 topicStore TS;
 
-int initPool(threadPool myPool) {
-	myPool.thread_idx = 0;
-	myPool.isFree = 1;
+int initPool(threadPool *myPool) {
+	myPool->numFiles = 0;
+	//printf("here\n");
+	for (int i = 0; i < NUMPROXIES; i++) {
+		myPool->isFree[i] = 1;
+	}
 	return 1;
 }
 
@@ -42,11 +45,22 @@ int initLock() {
 
 void *publisher(void *voidPool) {
 	threadPool *pubPool = (threadPool *) voidPool;
-	int th_idx = pubPool->thread_idx;
+	int th_idx, file_idx;
+	// find the index of current thread 
+	for (th_idx = 0; th_idx < NUMPROXIES; th_idx++) {
+		if (pthread_self() == pubPool->threads[th_idx]) 
+			break;
+	}
+	// if the index cannot be found, report an error
+	if (th_idx == NUMPROXIES) {
+		fprintf(stderr, "Error! Publisher <%ld> cannot find the current index\n", pthread_self());
+	}
 
-	pubPool->isFree = 0;
-	pubParse(mylock[th_idx], pubPool->filename);
-	pubPool->isFree = 1;
+	pubPool->isFree[th_idx] = 0;
+	for (int i = 0; i < pubPool->numFiles; i++) {
+		pubParse(mylock[th_idx], pubPool->filename[i]);
+	}
+	pubPool->isFree[th_idx] = 1;
 	return NULL;
 }
 
@@ -126,11 +140,22 @@ int pubParse(pthread_mutex_t mylock, char *filename) {
 
 void *subscriber(void *voidPool) {
 	threadPool *subPool = (threadPool *) voidPool;
-	int th_idx = subPool->thread_idx;
+	int th_idx, file_idx;
+	// find the index of current thread 
+	for (th_idx = 0; th_idx < NUMPROXIES; th_idx++) {
+		if (pthread_self() == subPool->threads[th_idx]) 
+			break;
+	}
+	// if the index cannot be found, report an error
+	if (th_idx == NUMPROXIES) {
+		fprintf(stderr, "Error! Subscriber <%ld> cannot find the current index\n", pthread_self());
+	}
 
-	subPool->isFree = 0;
-	subParse(mylock[th_idx], subPool->filename);
-	subPool->isFree = 1;
+	subPool->isFree[th_idx] = 0;
+	for (int i = 0; i < subPool->numFiles; i++) {
+		subParse(mylock[th_idx], subPool->filename[i]);
+	}
+	subPool->isFree[th_idx] = 1;
 	return NULL;
 }
 
@@ -263,9 +288,23 @@ void *clean(void *voidDelta) {
 	return NULL;
 }
 
-int joinPool(threadPool *myPool) {
+int createPubs(threadPool *pubPool) {
 	for (int i = 0; i < NUMPROXIES; i++) {
-		pthread_join(myPool[i].thread, NULL);
+		pthread_create(&pubPool->threads[i], NULL, &publisher, (void *) &pubPool);
+	}
+	return 1;
+}
+
+int createSubs(threadPool *subPool) {
+	for (int i = 0; i < NUMPROXIES; i++) {
+		pthread_create(&subPool->threads[i], NULL, &publisher, (void *) &subPool);
+	}
+	return 1;
+}
+
+int joinPool(threadPool *pool) {
+	for (int i = 0; i < NUMPROXIES; i++) {
+		pthread_join(pool->threads[i], NULL);
 	}
 	return 1;
 }
@@ -296,27 +335,18 @@ int main(int argc, char const *argv[])
 	}
 
 	// Topic variables
-	int iter = 0;
-	int pub_idx = 0;
-	int sub_idx = 0;
-	int pubFileCtr = 0;
-	int subFileCtr = 0;
-	char pub_file_arr[MAXPUBS][FILENAME_MAX];
-	char sub_file_arr[MAXSUBS][FILENAME_MAX];
 	int topicID;
 	char topicName[NAMESIZE];
 	int queueLen;
+	char *fname = NULL; 
 	int delta_t;
 
 	TS.numTopics = 0;
-	
-	threadPool pubPool[NUMPROXIES];
-	threadPool subPool[NUMPROXIES];
 
-	for (int i = 0; i < NUMPROXIES; i++) {
-		initPool(pubPool[i]);
-		initPool(subPool[i]);
-	}
+	threadPool *pubPool = (threadPool *)malloc(sizeof(threadPool)); 
+	threadPool *subPool = (threadPool *)malloc(sizeof(threadPool));
+	initPool(pubPool);
+    initPool(subPool);
     initLock();
 
 	while (getline(&line, &len, fp) != EOF) {
@@ -355,14 +385,14 @@ int main(int argc, char const *argv[])
 			}
 			else if (strcmp(arg_arr[1], "publishers") == 0) {
 				printf("query publishers ...\n");
-				for (int i = 0; i < pubFileCtr; i++) {
-					printf("publisher: <%d> - command file: <%s>\n", i+1, pub_file_arr[i]);
+				for (int i = 0; i < pubPool->numFiles; i++) {
+					printf("publisher: <%d> - command file: <%s>\n", i, pubPool->filename[i]);
 				}
 			}
 			else if (strcmp(arg_arr[1], "subscribers") == 0) {
 				printf("query subscribers ...\n");
-				for (int i = 0; i < subFileCtr; i++) {
-					printf("subscriber: <%d> - command file: <%s>\n", i+1, sub_file_arr[i]);
+				for (int i = 0; i < pubPool->numFiles; i++) {
+					printf("subscriber: <%d> - command file: <%s>\n", i, subPool->filename[i]);
 				}
 			}
 			else {
@@ -371,46 +401,22 @@ int main(int argc, char const *argv[])
 			}
 		}
 		else if (strcmp(arg_arr[0], "add") == 0) {
-			if (strcmp(arg_arr[1], "publisher") == 0 && pubFileCtr <= MAXPUBS) {
-				strcpy(pub_file_arr[pubFileCtr], arg_arr[2]);
-				pubFileCtr++;
-				printf("Publisher <%d> to be read from <%s> added!\n", pubFileCtr, arg_arr[2]);
-				// find a free thread and create thread
-				iter = 0;
-				while (TRUE) {
-					if (iter >= MAXPUBS) {
-						iter = 0;
-					}
-					if (pubPool[iter].isFree == 1) {
-						pub_idx = iter;
-						break;
-					}
-					iter++;
-				}
-				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
-				pubPool[pub_idx].thread_idx = pub_idx;
-				printf("Spawning publisher <%d>...\n", subFileCtr);
-				pthread_create(&pubPool[pub_idx].thread, NULL, &publisher, (void *) &pubPool[pub_idx]);
+			if (strcmp(arg_arr[1], "publisher") == 0 && pubPool->numFiles <= MAXPUBS) {
+				// fname = (char *)malloc(FILENAME_MAX*sizeof(char));
+				// strcpy(fname, arg_arr[2]);
+				// pubPool->filename[pubPool->numFiles] = fname;
+				strcpy(pubPool->filename[pubPool->numFiles], arg_arr[2]);
+				pubPool->numFiles++;
+				// free(fname);
+				printf("Publisher <%d> to be read from <%s> added!\n", pubPool->numFiles, arg_arr[2]);
 			}
-			else if (strcmp(arg_arr[1], "subscriber") == 0 && subFileCtr <= MAXSUBS) {
-				strcpy(sub_file_arr[pubFileCtr], arg_arr[2]);
-				subFileCtr++;
-				printf("Subscriber <%d> to be read from <%s> added!\n", subFileCtr, arg_arr[2]);
-				iter = 0;
-				while (TRUE) {
-					if (iter >= MAXPUBS) {
-						iter = 0;
-					}
-					if (subPool[iter].isFree == 1) {
-						sub_idx = iter;
-						break;
-					}
-					iter++;
-				}
-				strcpy(subPool[sub_idx].filename, arg_arr[2]);
-				subPool[pub_idx].thread_idx = sub_idx;
-				printf("Spawning subscriber <%d>...\n", subFileCtr);
-				pthread_create(&subPool[sub_idx].thread, NULL, &subscriber, (void *) &subPool[sub_idx]);
+			else if (strcmp(arg_arr[1], "subscriber") == 0 && subPool->numFiles <= MAXSUBS) {
+				// fname = (char *)malloc(FILENAME_MAX*sizeof(char));
+				// strcpy(fname, arg_arr[2]);
+				// subPool->filename[subPool->numFiles] = fname;
+				strcpy(subPool->filename[subPool->numFiles], arg_arr[2]);
+				subPool->numFiles++;
+				printf("Subscriber <%d> to be read from <%s> added!\n", subPool->numFiles, arg_arr[2]);
 			}
 			else {
 				fprintf(stderr, "Error! Can't add %s\n", arg_arr[1]);
@@ -436,9 +442,16 @@ int main(int argc, char const *argv[])
 	pthread_t cleanThread;
 	pthread_create(&cleanThread, NULL, &clean, (void *) &delta_t);
 
+	createPubs(pubPool);
+	createSubs(subPool);
+
 	joinPool(pubPool);
 	joinPool(subPool);
+
 	destroyLock();
+
+	free(pubPool);
+	free(subPool);
 	
 	return 0;
 }
