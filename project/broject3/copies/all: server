@@ -1,0 +1,16 @@
+all: server
+
+server: main.o quacker.o topicstore.o
+	gcc -g -pthread -o server main.o quacker.o topicstore.o
+
+main.o: quacker.h topicstore.h
+	gcc -g -pthread -c -o main.o main.c
+
+quacker.o: quacker.h quacker.c topicstore.h
+	gcc -g -pthread -c -o quacker.o quacker.c
+
+topicstore.o: topicstore.h topicstore.c
+	gcc -g -pthread -c -o topicstore.o topicstore.c
+
+clean:
+	rm -f main.o quacker.o topicstore.o server

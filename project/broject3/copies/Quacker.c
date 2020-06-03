@@ -1,15 +1,3 @@
-/*
-Description:
-    CIS 415 Project 3 InstaQuack! Part 2~5
-    quacker.c
-Author: Joseph Goh
-Last updated: 2019/12/08
-Notes:
-    N/A
-TO DO:
-    N/A
-*/
-
 #define _XOPEN_SOURCE 700
 
 #include <stdio.h>

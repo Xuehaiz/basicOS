@@ -1,15 +1,3 @@
-/*
-Description:
-    CIS 415 Project 3 InstaQuack!
-    quacker.h
-Author: Joseph Goh
-Last updated: 2019/12/08
-Notes:
-    N/A
-TO DO:
-    N/A
-*/
-
 #ifndef QUACKER_H_
 #define QUACKER_H_
 
