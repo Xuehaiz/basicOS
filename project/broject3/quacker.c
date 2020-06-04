@@ -244,10 +244,10 @@ void *clean(void *voidDelta) {
 					gettimeofday(&curr_time, NULL);
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > *delta) {
-						for (int i = 0; i < NUMPROXIES; i++) {
-							pthread_mutex_lock(&mylock[i]);
+						for (int k = 0; k < NUMPROXIES; k++) {
+							pthread_mutex_lock(&mylock[k]);
 							success = dequeue(&myEntry, &TS.topics[i]);
-							pthread_mutex_unlock(&mylock[i]);
+							pthread_mutex_unlock(&mylock[k]);
 							if (success) {
 								printf("Clean thread <%ld> dequeued entry <%d>\n", pthread_self(), myEntry.entryNum);
 								break;
@@ -266,15 +266,6 @@ void *clean(void *voidDelta) {
 		}
 	}
 	return NULL;
-}
-
-int joinPool(threadPool *myPool) {
-	for (int i = 0; i < NUMPROXIES; i++) {
-		if (!pthread_join(myPool[i].thread, NULL)) {
-			printf("Error! pool join failed\n");
-		}
-	}
-	return 1;
 }
 
 int destroyLock() {
@@ -449,7 +440,7 @@ int main(int argc, char const *argv[])
 		}
 	}
 
-	sleep(20);
+	sleep(30);
 	condition = 0;
 
 	if (pthread_join(cleanThread, NULL)) {

@@ -51,11 +51,11 @@ int enqueue(topicEntry *newEntry, topicQueue *TQ) {
 	int head = TQ->head;
 	int tail = TQ->tail;
 
-	if (TQ->isfull) { // buffer is full
+	if (TQ->isfull) { // buffer is full  // (tail + 1) % TQ->length == head
 		ret = 0;
 	}
 	else {
-		if (TQ->buffer[tail].entryNum != -1) {
+		if (TQ->buffer[tail].entryNum != -1) {  
 			TQ->buffer[tail].entryNum = TQ->entryCtr;
 			TQ->entryCtr++;
 			TQ->isempty = 0;
@@ -145,7 +145,7 @@ int getEntry(int lastEntry, topicQueue *TQ, topicEntry *TE) {
 					break;
 				}
 			}
-			// Case 3-ii: the last entry has been dequeued and have an entry added after that 
+			// Case 3-ii: the last entry has been dequeued and have an entry added afterwards
 			if (found) {
 				TE->entryNum = TQ->buffer[index].entryNum;
                 TE->timeStamp = TQ->buffer[index].timeStamp;

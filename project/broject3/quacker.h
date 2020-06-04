@@ -50,8 +50,6 @@ int subParse(pthread_mutex_t mylock, char *filename);
 
 void *clean(void *voidPool);
 
-int joinPool(threadPool *myPool);
-
 int destroyLock();
 
 #endif

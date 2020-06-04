@@ -1,10 +1,13 @@
-create topic 1 "t1" 5
-create topic 2 "t2" 10
-create topic 3 "t3" 15
+create topic 1 "Mountains" 6
+create topic 2 "Dogs" 3
+create topic 3 "Cats" 5
 query topics
-add publisher "publisher.txt"
+add publisher "publisher1.txt"
+add publisher "publisher2.txt"
+add publisher "publisher3.txt"
 query publishers
-add subscriber "subscriber.txt"
-query subscribers
 delta 5
+add subscriber "subscriber1.txt"
+add subscriber "subscriber2.txt"
+query subscribers
 start
