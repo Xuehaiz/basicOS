@@ -28,17 +28,29 @@ int initPool(threadPool *myPool) {
 	return 1;
 }
 
+int initLock() {
+	for (int i = 0; i < NUMPROXIES; i++) {
+		pthread_mutexattr_t attr;
+	    pthread_mutexattr_init(&attr);
+	    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+	    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
+	    pthread_mutex_init(&mylock[i], &attr);
+	    pthread_mutexattr_destroy(&attr);
+	}
+	return 1;
+}
+
 void *publisher(void *voidPool) {
 	threadPool *pubPool = (threadPool *) voidPool;
 	int th_idx = pubPool->thread_idx;
 
 	pubPool->isFree = 0;
-	pubParse(pubPool->filename);
+	pubParse(mylock[th_idx], pubPool->filename);
 	pubPool->isFree = 1;
 	return NULL;
 }
 
-int pubParse(char *filename) {
+int pubParse(pthread_mutex_t mylock, char *filename) {
 	FILE *fpub;
 	size_t len = 256;
 	char *line = (char *)malloc(len * sizeof(char));
@@ -88,6 +100,7 @@ int pubParse(char *filename) {
 				return 0;
 			}
 			myEntry = initEntry(pthread_self(), arg_arr[2], arg_arr[3]);
+			pthread_mutex_lock(&mylock);
 			// Try enqueue for 30 times, and sleep 100 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				success = enqueue(&myEntry, &TS.topics[index]);
@@ -100,6 +113,7 @@ int pubParse(char *filename) {
 			if (!success) {
 				fprintf(stderr, "Error! Publisher <%ld> failed to enqueue a new entry to topic ID: <%d>\n", pthread_self(), topicID);
 			}
+			pthread_mutex_lock(&mylock);
 		}
 		else {
 			fprintf(stderr, "Error! Publisher command does not recognize\n");
@@ -116,12 +130,12 @@ void *subscriber(void *voidPool) {
 	int th_idx = subPool->thread_idx;
 
 	subPool->isFree = 0;
-	subParse(subPool->filename);
+	subParse(mylock[th_idx], subPool->filename);
 	subPool->isFree = 1;
 	return NULL;
 }
 
-int subParse(char *filename) {
+int subParse(pthread_mutex_t mylock, char *filename) {
 	FILE *fsub;
 	size_t len = 256;
 	char *line = (char *)malloc(len * sizeof(char));
@@ -175,6 +189,7 @@ int subParse(char *filename) {
 				fclose(fsub);
 				return 0;
 			}
+			pthread_mutex_lock(&mylock);
 			// Try getEntry for 30 times, and sleep 100 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				entryNum = getEntry(lastEntry[index], &TS.topics[index], &myEntry);
@@ -195,6 +210,7 @@ int subParse(char *filename) {
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
 			}
+			pthread_mutex_lock(&mylock);
 		}
 		else {
 			fprintf(stderr, "Error! Subscriber command does not recognize\n");
@@ -229,7 +245,9 @@ void *clean(void *voidDelta) {
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > *delta) {
 						for (int k = 0; k < NUMPROXIES; k++) {
+							pthread_mutex_lock(&mylock[k]);
 							success = dequeue(&myEntry, &TS.topics[i]);
+							pthread_mutex_unlock(&mylock[k]);
 							if (success) {
 								printf("Clean thread <%ld> dequeued entry <%d>\n", pthread_self(), myEntry.entryNum);
 								break;
@@ -251,8 +269,8 @@ void *clean(void *voidDelta) {
 }
 
 int destroyLock() {
-	for (int i = 0; i < TS.numTopics; i++) {
-		pthread_mutex_destroy(&TS.topics[i].mylock);
+	for (int i = 0; i < NUMPROXIES; i++) {
+		pthread_mutex_destroy(&mylock[i]);
 	}
 	return 1;
 }
@@ -290,13 +308,14 @@ int main(int argc, char const *argv[])
 
 	TS.numTopics = 0;
 	
-	threadPool pubPool[MAXPUBS];
-	threadPool subPool[MAXSUBS];
+	threadPool pubPool[NUMPROXIES];
+	threadPool subPool[NUMPROXIES];
 
-	for (int i = 0; i < MAXPUBS; i++) {
+	for (int i = 0; i < NUMPROXIES; i++) {
 		initPool(&pubPool[i]);
 		initPool(&subPool[i]);
 	}
+    initLock();
 
 	while (getline(&line, &len, fp) != EOF) {
 		// clean up arg_arr in each iteration 

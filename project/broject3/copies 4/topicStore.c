@@ -21,7 +21,7 @@
 
 topicQueue topic;
 
-topicEntry initEntry(long int pubID, char *photoURL, char *photoCaption) {
+topicEntry initEntry(int pubID, char *photoURL, char *photoCaption) {
 	topicEntry myEntry;
 	myEntry.pubID = pubID;
 	strcpy(myEntry.photoURL, photoURL);
@@ -47,15 +47,13 @@ int initQueue(int qid, char *name, int len, topicQueue *myQueue) {
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
     pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
-    pthread_mutex_init(&myQueue->mylock, &attr);
+    pthread_mutex_init(&mylock, &attr);
     pthread_mutexattr_destroy(&attr);
     return 1;
 }
 
 int enqueue(topicEntry *newEntry, topicQueue *TQ) {
 	int ret = 0;
-
-	pthread_mutex_lock(&TQ->mylock);
 
 	int head = TQ->head;
 	int tail = TQ->tail;
@@ -84,14 +82,11 @@ int enqueue(topicEntry *newEntry, topicQueue *TQ) {
 			ret = 1;
 		}
 	}
-	pthread_mutex_unlock(&TQ->mylock);
 	return ret;
 }
 
 int dequeue(topicEntry *TE, topicQueue *TQ) {
 	int ret = 0;
-
-	pthread_mutex_lock(&TQ->mylock);
 
 	int head = TQ->head;
 	int tail = TQ->tail;
@@ -117,7 +112,6 @@ int dequeue(topicEntry *TE, topicQueue *TQ) {
 		}
 		ret = 1;
 	}
-	pthread_mutex_unlock(&TQ->mylock);
 	return ret;
 }
 
@@ -128,8 +122,6 @@ int getEntry(int lastEntry, topicQueue *TQ, topicEntry *TE) {
 	int head = TQ->head;
 	int tail = TQ->tail;
 	int numEntries = tail - head + 1;
-
-	pthread_mutex_lock(&TQ->mylock);
 	// Case 1: topicQueue is empty
 	if (TQ->isempty) {
 		ret = 0;
@@ -175,7 +167,6 @@ int getEntry(int lastEntry, topicQueue *TQ, topicEntry *TE) {
 			}
 		}
 	}
-	pthread_mutex_unlock(&TQ->mylock);
 	return ret;
 }
 

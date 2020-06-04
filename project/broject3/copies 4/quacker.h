@@ -34,17 +34,19 @@ typedef struct threadPool {
 
 pthread_t cleanThread;
 
+pthread_mutex_t mylock[NUMPROXIES]; // = PTHREAD_MUTEX_INITIALIZER;
+
 int initPool(threadPool *myPool);
 
-// int initLock();
+int initLock();
 
 void *publisher(void *voidPool);
 
 void *subscriber(void *voidPool);
 
-int pubParse(char *filename);
+int pubParse(pthread_mutex_t mylock, char *filename);
 
-int subParse(char *filename);
+int subParse(pthread_mutex_t mylock, char *filename);
 
 void *clean(void *voidPool);
 

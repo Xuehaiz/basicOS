@@ -47,7 +47,7 @@ typedef struct topicStore {
     topicQueue topics[MAXTOPICS];
 } topicStore;
 
-topicEntry initEntry(long int pubID, char *photoURL, char *photoCaption);
+topicEntry initEntry(int pubID, char *photoURL, char *photoCaption);
 
 int initQueue(int qid, char *name, int len, topicQueue *myQueue);
 
