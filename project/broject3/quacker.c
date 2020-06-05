@@ -239,7 +239,7 @@ void *clean(void *voidDelta) {
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > *delta) {
 						if (dequeue(&myEntry, &TS.topics[i])) {
-							printf("Clean thread <%ld> dequeued entry <%d> from topic ID <%d> with filename <%s>\n", pthread_self(), myEntry.entryNum, TS.topics[i].qid, TS.topics[i].filename);
+							printf("Clean thread <%ld> dequeued entry <%d> from topic ID <%d> with filename <%s>\n", pthread_self(), myEntry.entryNum, TS.topics[i].qid, TS.topics[i].name);
 							break;
 						}
 					}
