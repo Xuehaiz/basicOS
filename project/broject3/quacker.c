@@ -177,6 +177,7 @@ int subParse(char *filename) {
 			}
 			// Try getEntry for 30 times, and sleep 500 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
+				printf("here: %d\n", i);
 				entryNum = getEntry(lastEntry[index], &TS.topics[index], &myEntry);
 				if (entryNum == 1) {
 					printf("Subscriber <%ld> got entry <%d> from topic ID <%d>\n", pthread_self(), myEntry.entryNum, topicID);
@@ -190,7 +191,7 @@ int subParse(char *filename) {
 					lastEntry[index] = entryNum;
 					break;
 				}
-				usleep(5000);
+				usleep(500);
 			}
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
