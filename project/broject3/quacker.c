@@ -429,8 +429,6 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "Error! Clean thread join failed\n");
 	}
 
-	
-
 	free(line);
 	destroyLock();
 	
