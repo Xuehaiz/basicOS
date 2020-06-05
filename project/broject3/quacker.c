@@ -73,7 +73,7 @@ int pubParse(char *filename) {
 		}
 		else if (strcmp(arg_arr[0], "sleep") == 0) {
 			sscanf(arg_arr[1], "%d", &sleep_t);
-			usleep(sleep_t);
+			usleep(sleep_t * 1000);
 		}
 		else if (strcmp(arg_arr[0], "put") == 0) {
 			sscanf(arg_arr[1], "%d", &topicID);
@@ -99,7 +99,7 @@ int pubParse(char *filename) {
 				}
 				// timespec.tv_nsec = 100000000;
 				// nanosleep(&timespec, NULL);
-				usleep(100);
+				usleep(100000);
 			}
 			if (!success) {
 				fprintf(stderr, "Error! Publisher <%ld> failed to enqueue a new entry to topic ID: <%d>\n", pthread_self(), topicID);
@@ -166,7 +166,7 @@ int subParse(char *filename) {
 		}
 		else if (strcmp(arg_arr[0], "sleep") == 0) {
 			sscanf(arg_arr[1], "%d", &sleep_t);
-			usleep(sleep_t);
+			usleep(sleep_t * 1000);
 		}
 		else if (strcmp(arg_arr[0], "get") == 0) {
 			sscanf(arg_arr[1], "%d", &topicID);
@@ -198,7 +198,7 @@ int subParse(char *filename) {
 				}
 				// timespec.tv_nsec = 100000000;
 				// nanosleep(&timespec, NULL);
-				usleep(100);
+				usleep(100000);
 			}
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
@@ -368,7 +368,7 @@ int main(int argc, char const *argv[])
 					iter++;
 					// timespec.tv_nsec = 100000000;
 					// nanosleep(&timespec, NULL);
-					usleep(100);
+					usleep(100000);
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
@@ -391,7 +391,7 @@ int main(int argc, char const *argv[])
 					iter++;
 					// timespec.tv_nsec = 100000000;
 					// nanosleep(&timespec, NULL);
-					usleep(100);
+					usleep(100000);
 				}
 				strcpy(subPool[sub_idx].filename, arg_arr[2]);
 				subPool[pub_idx].thread_idx = sub_idx;
