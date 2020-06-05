@@ -80,6 +80,7 @@ int pubParse(char *filename) {
 			// find the topics' index 
 			for (index = 0; index < TS.numTopics; index++) {
 				printf("TS.topics[index].qid::::::::::::::::::::::: %d\n", TS.topics[index].qid );
+				printf("topicID: %d*********************\n", topicID);
 				if (TS.topics[index].qid == topicID) {
 					break;
 				}
