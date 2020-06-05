@@ -96,6 +96,7 @@ int pubParse(char *filename) {
 					break;
 				}
 				usleep(500);
+				printf("sleep??\n");
 			}
 			if (!success) {
 				fprintf(stderr, "Error! Publisher <%ld> failed to enqueue a new entry to topic ID: <%d>\n", pthread_self(), topicID);
@@ -178,7 +179,6 @@ int subParse(char *filename) {
 			}
 			// Try getEntry for 30 times, and sleep 500 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
-				printf("here: %d\n", i);
 				entryNum = getEntry(lastEntry[index], &TS.topics[index], &myEntry);
 				if (entryNum == 1) {
 					printf("Subscriber <%ld> got entry <%d> from topic ID <%d>\n", pthread_self(), myEntry.entryNum, topicID);
@@ -195,7 +195,6 @@ int subParse(char *filename) {
 				timespec.tv_nsec = 100000000;
 				nanosleep(&timespec, NULL);
 				// usleep(100);
-				printf("sleeping??\n");
 			}
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
