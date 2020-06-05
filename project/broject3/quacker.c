@@ -389,8 +389,9 @@ int main(int argc, char const *argv[])
 						break;
 					}
 					iter++;
-					timespec.tv_nsec = 100000000;
-					nanosleep(&timespec, NULL);
+					// timespec.tv_nsec = 100000000;
+					// nanosleep(&timespec, NULL);
+					usleep(100);
 				}
 				strcpy(subPool[sub_idx].filename, arg_arr[2]);
 				subPool[pub_idx].thread_idx = sub_idx;
