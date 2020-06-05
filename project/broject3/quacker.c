@@ -422,7 +422,7 @@ int main(int argc, char const *argv[])
 		}
 	}
 
-	sleep(30);
+	sleep(40);
 	condition = 0;
 
 	if (pthread_join(cleanThread, NULL)) {
