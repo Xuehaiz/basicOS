@@ -96,7 +96,7 @@ int pubParse(char *filename) {
 			for (int i = 0; i < 30; i++) {
 				success = enqueue(&myEntry, &TS.topics[index]);
 				if (success) {
-					printf("Publisher <%ld> enqueued a new entry to topic ID: <%d> with filename <%s>\n", pthread_self(), &TS.topics[index].qid, &TS.topics[index].name);
+					printf("Publisher <%ld> enqueued a new entry to topic ID: <%d> with filename <%s>\n", pthread_self(), TS.topics[index].qid, TS.topics[index].name);
 					break;
 				}
 				timespec.tv_nsec = 100000000;
