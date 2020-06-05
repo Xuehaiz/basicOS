@@ -169,7 +169,7 @@ int getEntry(int lastEntry, topicQueue *TQ, topicEntry *TE) {
                 strcpy(TE->photoCaption, TQ->buffer[index].photoCaption);
                 ret = TQ->buffer[index].entryNum;
 			}
-			// Case 3-i: the desired entry hasn't arrived
+			// Case 3-i: the target entry hasn't arrived
 			else {
 				ret = 0;
 			}

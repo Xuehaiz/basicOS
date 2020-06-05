@@ -1,5 +1,5 @@
 /*=============================================================================
- * Program Name: topicStore.c
+ * Program Name: quacker.c
  * Author: Xuehai Zhou
  * Date: May 26, 2020
  * Description:
@@ -88,14 +88,14 @@ int pubParse(char *filename) {
 				return 0;
 			}
 			myEntry = initEntry(pthread_self(), arg_arr[2], arg_arr[3]);
-			// Try enqueue for 30 times, and sleep 100 ms in each failure attempt interval
+			// Try enqueue for 30 times, and sleep 500 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				success = enqueue(&myEntry, &TS.topics[index]);
 				if (success) {
 					printf("Publisher <%ld> enqueued a new entry to topic ID: <%d>\n", pthread_self(), topicID);
 					break;
 				}
-				usleep(100);
+				usleep(500);
 			}
 			if (!success) {
 				fprintf(stderr, "Error! Publisher <%ld> failed to enqueue a new entry to topic ID: <%d>\n", pthread_self(), topicID);
@@ -175,7 +175,7 @@ int subParse(char *filename) {
 				fclose(fsub);
 				return 0;
 			}
-			// Try getEntry for 30 times, and sleep 100 ms in each failure attempt interval
+			// Try getEntry for 30 times, and sleep 500 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				entryNum = getEntry(lastEntry[index], &TS.topics[index], &myEntry);
 				if (entryNum == 1) {
@@ -190,7 +190,7 @@ int subParse(char *filename) {
 					lastEntry[index] = entryNum;
 					break;
 				}
-				usleep(100);
+				usleep(500);
 			}
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
@@ -290,10 +290,10 @@ int main(int argc, char const *argv[])
 
 	TS.numTopics = 0;
 	
-	threadPool pubPool[MAXPUBS];
-	threadPool subPool[MAXSUBS];
+	threadPool pubPool[NUMPROXIES];
+	threadPool subPool[NUMPROXIES];
 
-	for (int i = 0; i < MAXPUBS; i++) {
+	for (int i = 0; i < NUMPROXIES; i++) {
 		initPool(&pubPool[i]);
 		initPool(&subPool[i]);
 	}
@@ -352,7 +352,7 @@ int main(int argc, char const *argv[])
 				// find a free thread and create thread
 				iter = 0;
 				while (TRUE) {
-					if (iter >= MAXPUBS) {
+					if (iter >= NUMPROXIES) {
 						iter = 0;
 					}
 					if (pubPool[iter].isFree == 1) {
@@ -371,7 +371,7 @@ int main(int argc, char const *argv[])
 				subFileCtr++;
 				iter = 0;
 				while (TRUE) {
-					if (iter >= MAXPUBS) {
+					if (iter >= NUMPROXIES) {
 						iter = 0;
 					}
 					if (subPool[iter].isFree == 1) {

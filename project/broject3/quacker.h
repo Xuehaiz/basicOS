@@ -1,9 +1,9 @@
 /*=============================================================================
- * Program Name: topicStore.c
+ * Program Name: qucker.h
  * Author: Xuehai Zhou
  * Date: May 26, 2020
  * Description:
- *     CIS 415 Project 3 InstaQuack Part 2~5 source file
+ *     CIS 415 Project 3 InstaQuack Part 2~5 header file
  *
  * Notes:
  *     N/A
@@ -25,7 +25,6 @@
 int condition = 1;
 
 typedef struct threadPool {
-    // int numFiles;
     char filename[FILENAME_MAX];
     int thread_idx;
     pthread_t thread;
@@ -35,8 +34,6 @@ typedef struct threadPool {
 pthread_t cleanThread;
 
 int initPool(threadPool *myPool);
-
-// int initLock();
 
 void *publisher(void *voidPool);
 
