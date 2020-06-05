@@ -54,7 +54,6 @@ int pubParse(char *filename) {
 	int index = 0;
 	int topicID = 0;
 	int success = 0;
-	// struct timespec timespec; 
 
 	topicEntry myEntry;
 	while (getline(&line, &len, fpub) != EOF) {
@@ -90,15 +89,13 @@ int pubParse(char *filename) {
 				return 0;
 			}
 			myEntry = initEntry(pthread_self(), arg_arr[2], arg_arr[3]);
-			// Try enqueue for 30 times, and sleep 100 ms in each failure attempt interval
+			// Try enqueue for 30 times, and sleep 100 miliseconds in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				success = enqueue(&myEntry, &TS.topics[index]);
 				if (success) {
 					printf("Publisher <%ld> enqueued a new entry to topic ID: <%d> with filename <%s>\n", pthread_self(), TS.topics[index].qid, TS.topics[index].name);
 					break;
 				}
-				// timespec.tv_nsec = 100000000;
-				// nanosleep(&timespec, NULL);
 				usleep(100000);
 			}
 			if (!success) {
@@ -142,7 +139,6 @@ int subParse(char *filename) {
 	int index = 0;
 	int topicID = 0;
 	int entryNum = 0;
-	// struct timespec timespec; 
 	topicEntry myEntry;
 
 	int lastEntry[TS.numTopics];
@@ -181,7 +177,7 @@ int subParse(char *filename) {
 				fclose(fsub);
 				return 0;
 			}
-			// Try getEntry for 30 times, and sleep 100 ms in each failure attempt interval
+			// Try getEntry for 30 times, and sleep 100 milisecond in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				entryNum = getEntry(lastEntry[index], &TS.topics[index], &myEntry);
 				if (entryNum == 1) {
@@ -196,8 +192,6 @@ int subParse(char *filename) {
 					lastEntry[index] = entryNum;
 					break;
 				}
-				// timespec.tv_nsec = 100000000;
-				// nanosleep(&timespec, NULL);
 				usleep(100000);
 			}
 			if (!entryNum) {
@@ -291,7 +285,6 @@ int main(int argc, char const *argv[])
 	char topicName[NAMESIZE];
 	int queueLen;
 	int delta_t;
-	// struct timespec timespec; 
 
 	TS.numTopics = 0;
 	
@@ -366,13 +359,10 @@ int main(int argc, char const *argv[])
 					}
 
 					iter++;
-					// timespec.tv_nsec = 100000000;
-					// nanosleep(&timespec, NULL);
 					usleep(100000);
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
-				printf("pub_idx: %d\n", pub_idx);
 				pthread_create(&pubPool[pub_idx].thread, NULL, &publisher, (void *) &pubPool[pub_idx]);
 				printf("Publisher <%d> to be read from <%s> added!\n", pubFileCtr, arg_arr[2]);
 			}
@@ -389,8 +379,6 @@ int main(int argc, char const *argv[])
 						break;
 					}
 					iter++;
-					// timespec.tv_nsec = 100000000;
-					// nanosleep(&timespec, NULL);
 					usleep(100000);
 				}
 				strcpy(subPool[sub_idx].filename, arg_arr[2]);
