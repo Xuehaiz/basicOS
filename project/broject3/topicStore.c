@@ -60,29 +60,25 @@ int enqueue(topicEntry *newEntry, topicQueue *TQ) {
 	int head = TQ->head;
 	int tail = TQ->tail;
 
-	if (TQ->isfull) { // buffer is full  // (tail + 1) % TQ->length == head
+	if (tail - head == -1) { // buffer is full  // (tail + 1) % TQ->length == head
 		ret = 0;
 	}
-	else {
-		if (TQ->buffer[tail].entryNum != -1) {  
-			TQ->buffer[tail].entryNum = TQ->entryCtr;
-			TQ->entryCtr++;
-			TQ->isempty = 0;
-			TQ->buffer[tail].pubID = newEntry->pubID;
-	        strcpy(TQ->buffer[tail].photoURL, newEntry->photoURL);
-	        strcpy(TQ->buffer[tail].photoCaption, newEntry->photoCaption);
-			gettimeofday(&TQ->buffer[tail].timeStamp, NULL);
-			if (tail + 1 == TQ->length) {
-				TQ->tail = 0;
-			}
-			else {
-				TQ->tail++;
-			}
-			if (tail + 1 == head) {
-				TQ->isfull = 1;
-			}
-			ret = 1;
+	else if (TQ->buffer[tail].entryNum != -1){
+		TQ->buffer[tail].entryNum = TQ->entryCtr;
+		TQ->entryCtr++;
+		// TQ->isempty = 0;
+		TQ->buffer[tail].pubID = newEntry->pubID;
+        strcpy(TQ->buffer[tail].photoURL, newEntry->photoURL);
+        strcpy(TQ->buffer[tail].photoCaption, newEntry->photoCaption);
+		gettimeofday(&TQ->buffer[tail].timeStamp, NULL);
+		if (tail == TQ->length) {
+			TQ->tail = 0;
 		}
+		else {
+			TQ->tail++;
+		}
+		ret = 1;
+		
 	}
 	pthread_mutex_unlock(&TQ->mylock);
 	return ret;
@@ -95,7 +91,7 @@ int dequeue(topicEntry *TE, topicQueue *TQ) {
 
 	int head = TQ->head;
 	int tail = TQ->tail;
-	if (TQ->isempty) { // is empty 
+	if (head == tail) { // is empty 
 		ret = 0;
 	}
 	else {
@@ -106,14 +102,11 @@ int dequeue(topicEntry *TE, topicQueue *TQ) {
 		strcpy(TE->photoCaption, TQ->buffer[head].photoCaption);
 		// change current entry to null
 		TQ->buffer[head].entryNum = -1;
-		if (head + 1 == TQ->length) {
+		if (head == TQ->length) {
 			TQ->head = 0;
 		}
 		else {
 			TQ->head++;
-		}
-		if (head + 1 == tail) {
-			TQ->isempty = 1;
 		}
 		ret = 1;
 	}
