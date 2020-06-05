@@ -39,7 +39,6 @@ void *publisher(void *voidPool) {
 }
 
 int pubParse(char *filename) {
-	printf("filename: %s-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n", filename);
 	FILE *fpub;
 	size_t len = 256;
 	char *line = (char *)malloc(len * sizeof(char));
@@ -55,7 +54,7 @@ int pubParse(char *filename) {
 	int index = 0;
 	int topicID = 0;
 	int success = 0;
-	struct timespec timespec; 
+	// struct timespec timespec; 
 
 	topicEntry myEntry;
 	while (getline(&line, &len, fpub) != EOF) {
@@ -90,7 +89,6 @@ int pubParse(char *filename) {
 				fclose(fpub);
 				return 0;
 			}
-			printf("index: %d ==========================\n", index);
 			myEntry = initEntry(pthread_self(), arg_arr[2], arg_arr[3]);
 			// Try enqueue for 30 times, and sleep 100 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
@@ -99,10 +97,9 @@ int pubParse(char *filename) {
 					printf("Publisher <%ld> enqueued a new entry to topic ID: <%d> with filename <%s>\n", pthread_self(), TS.topics[index].qid, TS.topics[index].name);
 					break;
 				}
-				timespec.tv_nsec = 100000000;
-				nanosleep(&timespec, NULL);
-				// usleep(100);
-				printf("sleep??\n");
+				// timespec.tv_nsec = 100000000;
+				// nanosleep(&timespec, NULL);
+				usleep(100);
 			}
 			if (!success) {
 				fprintf(stderr, "Error! Publisher <%ld> failed to enqueue a new entry to topic ID: <%d>\n", pthread_self(), topicID);
@@ -145,7 +142,7 @@ int subParse(char *filename) {
 	int index = 0;
 	int topicID = 0;
 	int entryNum = 0;
-	struct timespec timespec; 
+	// struct timespec timespec; 
 	topicEntry myEntry;
 
 	int lastEntry[TS.numTopics];
@@ -199,9 +196,9 @@ int subParse(char *filename) {
 					lastEntry[index] = entryNum;
 					break;
 				}
-				timespec.tv_nsec = 100000000;
-				nanosleep(&timespec, NULL);
-				// usleep(100);
+				// timespec.tv_nsec = 100000000;
+				// nanosleep(&timespec, NULL);
+				usleep(100);
 			}
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
@@ -294,7 +291,7 @@ int main(int argc, char const *argv[])
 	char topicName[NAMESIZE];
 	int queueLen;
 	int delta_t;
-	struct timespec timespec; 
+	// struct timespec timespec; 
 
 	TS.numTopics = 0;
 	
@@ -369,8 +366,9 @@ int main(int argc, char const *argv[])
 					}
 
 					iter++;
-					timespec.tv_nsec = 100000000;
-					nanosleep(&timespec, NULL);
+					// timespec.tv_nsec = 100000000;
+					// nanosleep(&timespec, NULL);
+					usleep(100);
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
@@ -416,7 +414,7 @@ int main(int argc, char const *argv[])
 			fprintf(stderr, "Error! Unsupport arguments\n");
 			// exit(EXIT_FAILURE);
 		}
-		printf("-------------------------------------\n");
+		printf("---------------------------------------------------------------\n");
 	}
 	fclose(fp);
 
