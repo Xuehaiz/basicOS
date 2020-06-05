@@ -79,8 +79,10 @@ int pubParse(char *filename) {
 			sscanf(arg_arr[1], "%d", &topicID);
 			// find the topics' index 
 			for (index = 0; index < TS.numTopics; index++) {
-				if (TS.topics[index].qid == topicID)
+				printf("TS.topics[index].qid::::::::::::::::::::::: %d\n", TS.topics[index].qid );
+				if (TS.topics[index].qid == topicID) {
 					break;
+				}
 			}
 			// if the topic index cannot find, report an error
 			if (index == TS.numTopics) {
@@ -88,6 +90,7 @@ int pubParse(char *filename) {
 				fclose(fpub);
 				return 0;
 			}
+			printf("index: %d ==========================\n", index);
 			myEntry = initEntry(pthread_self(), arg_arr[2], arg_arr[3]);
 			// Try enqueue for 30 times, and sleep 100 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
@@ -318,7 +321,6 @@ int main(int argc, char const *argv[])
 			sscanf(arg_arr[2], "%d", &topicID);
 			sscanf(arg_arr[4], "%d", &queueLen);
 			// build queue
-			printf("topicID: %d ------------\n", topicID);
 			initQueue(topicID, arg_arr[3], queueLen, &TS.topics[TS.numTopics]);
 			TS.numTopics++;
 			printf("Topic <%s> created - topicID: <%d> - length: <%d>\n", arg_arr[3], topicID, queueLen);
