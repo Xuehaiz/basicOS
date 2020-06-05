@@ -37,8 +37,6 @@ typedef struct topicQueue {
     topicEntry buffer[MAXENTRIES];
     int head;
     int tail;
-    int isfull;
-    int isempty;
     pthread_mutex_t mylock;
 } topicQueue;
 

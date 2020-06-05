@@ -40,8 +40,6 @@ int initQueue(int qid, char *name, int len, topicQueue *myQueue) {
     myQueue->entryCtr = 0;
     myQueue->head = 0;
     myQueue->tail = 0;
-    myQueue->isfull = 0;
-    myQueue->isempty = 1;
 
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);

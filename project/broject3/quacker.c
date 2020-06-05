@@ -367,12 +367,14 @@ int main(int argc, char const *argv[])
 						pub_idx = iter;
 						break;
 					}
+
 					iter++;
 					timespec.tv_nsec = 100000000;
 					nanosleep(&timespec, NULL);
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
+				printf("pub_idx: %d\n", pub_idx);
 				pthread_create(&pubPool[pub_idx].thread, NULL, &publisher, (void *) &pubPool[pub_idx]);
 				printf("Publisher <%d> to be read from <%s> added!\n", pubFileCtr, arg_arr[2]);
 			}
