@@ -137,6 +137,7 @@ int subParse(char *filename) {
 	int index = 0;
 	int topicID = 0;
 	int entryNum = 0;
+	struct timespec timespec; 
 	topicEntry myEntry;
 
 	int lastEntry[TS.numTopics];
@@ -191,7 +192,9 @@ int subParse(char *filename) {
 					lastEntry[index] = entryNum;
 					break;
 				}
-				usleep(5000);
+				timespec.tv_nsec = 100000000;
+				nanosleep(&timespec, NULL);
+				// usleep(100);
 				printf("sleeping??\n");
 			}
 			if (!entryNum) {
