@@ -124,7 +124,7 @@ int getEntry(int lastEntry, topicQueue *TQ, topicEntry *TE) {
 
 	pthread_mutex_lock(&TQ->mylock);
 	// Case 1: topicQueue is empty
-	if (TQ->isempty) {
+	if (head == tail) {
 		ret = 0;
 	}
 	else {
