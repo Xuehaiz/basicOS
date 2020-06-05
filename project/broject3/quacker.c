@@ -296,6 +296,7 @@ int main(int argc, char const *argv[])
 	char topicName[NAMESIZE];
 	int queueLen;
 	int delta_t;
+	struct timespec timespec; 
 
 	TS.numTopics = 0;
 	
@@ -369,6 +370,8 @@ int main(int argc, char const *argv[])
 						break;
 					}
 					iter++;
+					timespec.tv_nsec = 100000000;
+					nanosleep(&timespec, NULL);
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
@@ -388,6 +391,8 @@ int main(int argc, char const *argv[])
 						break;
 					}
 					iter++;
+					timespec.tv_nsec = 100000000;
+					nanosleep(&timespec, NULL);
 				}
 				strcpy(subPool[sub_idx].filename, arg_arr[2]);
 				subPool[pub_idx].thread_idx = sub_idx;

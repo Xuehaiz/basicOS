@@ -17,7 +17,7 @@
 #include <sys/time.h>
 #include "topicStore.h"
 
-#define NUMPROXIES 5
+#define NUMPROXIES 2
 #define MAXPUBS 20
 #define MAXSUBS 20
 #define TRUE 1
