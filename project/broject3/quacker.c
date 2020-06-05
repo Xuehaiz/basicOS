@@ -69,7 +69,6 @@ int pubParse(char *filename) {
 			arg_ctr++;
 		}
 		if (strcmp(arg_arr[0], "stop") == 0) {
-			fclose(fpub);
 			break;
 		}
 		else if (strcmp(arg_arr[0], "sleep") == 0) {
@@ -113,6 +112,7 @@ int pubParse(char *filename) {
 		sched_yield();
 	}
 	free(line);
+	fclose(fpub);
 	return 1;
 }
 
@@ -318,6 +318,7 @@ int main(int argc, char const *argv[])
 			sscanf(arg_arr[2], "%d", &topicID);
 			sscanf(arg_arr[4], "%d", &queueLen);
 			// build queue
+			printf("topicID: %d ------------\n", topicID);
 			initQueue(topicID, arg_arr[3], queueLen, &TS.topics[TS.numTopics]);
 			TS.numTopics++;
 			printf("Topic <%s> created - topicID: <%d> - length: <%d>\n", arg_arr[3], topicID, queueLen);
