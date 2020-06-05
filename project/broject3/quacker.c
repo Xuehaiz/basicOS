@@ -30,7 +30,6 @@ int initPool(threadPool *myPool) {
 
 void *publisher(void *voidPool) {
 	threadPool *pubPool = (threadPool *) voidPool;
-	int th_idx = pubPool->thread_idx;
 
 	pubPool->isFree = 0;
 	pubParse(pubPool->filename);
@@ -115,7 +114,6 @@ int pubParse(char *filename) {
 
 void *subscriber(void *voidPool) {
 	threadPool *subPool = (threadPool *) voidPool;
-	int th_idx = subPool->thread_idx;
 
 	subPool->isFree = 0;
 	subParse(subPool->filename);
@@ -213,10 +211,8 @@ void *clean(void *voidDelta) {
 	struct timeval curr_time;
 	struct timeval lastclean;
 	double diff_t;
-	struct topicEntry TE;
 	gettimeofday(&lastclean, NULL);
 	int numEntries = 0;
-	int th_idx = 0;
 	topicEntry myEntry;
 	while (condition) {
 		gettimeofday(&curr_time, NULL);
@@ -255,7 +251,7 @@ int destroyLock() {
 	return 1;
 }
 
-int main(int argc, char const *argv[])
+int main(int argc __attribute__((unused)), char const *argv[])
 {
 	// read file / getline variables
 	FILE *fp;
@@ -282,7 +278,6 @@ int main(int argc, char const *argv[])
 	char pub_file_arr[MAXPUBS][FILENAME_MAX];
 	char sub_file_arr[MAXSUBS][FILENAME_MAX];
 	int topicID;
-	char topicName[NAMESIZE];
 	int queueLen;
 	int delta_t;
 
