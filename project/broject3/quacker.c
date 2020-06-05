@@ -54,6 +54,8 @@ int pubParse(char *filename) {
 	int index = 0;
 	int topicID = 0;
 	int success = 0;
+	struct timespec timespec; 
+
 	topicEntry myEntry;
 	while (getline(&line, &len, fpub) != EOF) {
 		for (int i = 0; i < arg_ctr; i++) {
@@ -88,14 +90,16 @@ int pubParse(char *filename) {
 				return 0;
 			}
 			myEntry = initEntry(pthread_self(), arg_arr[2], arg_arr[3]);
-			// Try enqueue for 30 times, and sleep 500 ms in each failure attempt interval
+			// Try enqueue for 30 times, and sleep 100 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				success = enqueue(&myEntry, &TS.topics[index]);
 				if (success) {
 					printf("Publisher <%ld> enqueued a new entry to topic ID: <%d>\n", pthread_self(), topicID);
 					break;
 				}
-				usleep(500);
+				timespec.tv_nsec = 100000000;
+				nanosleep(&timespec, NULL);
+				// usleep(100);
 				printf("sleep??\n");
 			}
 			if (!success) {
@@ -177,7 +181,7 @@ int subParse(char *filename) {
 				fclose(fsub);
 				return 0;
 			}
-			// Try getEntry for 30 times, and sleep 500 ms in each failure attempt interval
+			// Try getEntry for 30 times, and sleep 100 ms in each failure attempt interval
 			for (int i = 0; i < 30; i++) {
 				entryNum = getEntry(lastEntry[index], &TS.topics[index], &myEntry);
 				if (entryNum == 1) {
@@ -232,7 +236,7 @@ void *clean(void *voidDelta) {
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > *delta) {
 						if (dequeue(&myEntry, &TS.topics[i])) {
-							printf("Clean thread <%ld> dequeued entry <%d>\n", pthread_self(), myEntry.entryNum);
+							printf("Clean thread <%ld> dequeued entry <%d> from topic ID <%d> \n", pthread_self(), myEntry.entryNum, TS.topics[i].qid);
 							break;
 						}
 					}
