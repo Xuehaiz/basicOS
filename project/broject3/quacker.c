@@ -215,7 +215,6 @@ void *clean(void *voidDelta) {
 	gettimeofday(&lastclean, NULL);
 	int numEntries = 0;
 	int th_idx = 0;
-	int success = 0;
 	topicEntry myEntry;
 	while (condition) {
 		gettimeofday(&curr_time, NULL);
@@ -228,12 +227,9 @@ void *clean(void *voidDelta) {
 					gettimeofday(&curr_time, NULL);
 					diff_t = difftime(curr_time.tv_sec, TS.topics[i].buffer[j].timeStamp.tv_sec);
 					if (diff_t > *delta) {
-						for (int k = 0; k < NUMPROXIES; k++) {
-							success = dequeue(&myEntry, &TS.topics[i]);
-							if (success) {
-								printf("Clean thread <%ld> dequeued entry <%d>\n", pthread_self(), myEntry.entryNum);
-								break;
-							}
+						if (dequeue(&myEntry, &TS.topics[i])) {
+							printf("Clean thread <%ld> dequeued entry <%d>\n", pthread_self(), myEntry.entryNum);
+							break;
 						}
 					}
 					// If we hit an entry that's not old enough, all entries after that aren't either
