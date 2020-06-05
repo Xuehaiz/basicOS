@@ -39,6 +39,7 @@ void *publisher(void *voidPool) {
 }
 
 int pubParse(char *filename) {
+	printf("filename: %s-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n", filename);
 	FILE *fpub;
 	size_t len = 256;
 	char *line = (char *)malloc(len * sizeof(char));
