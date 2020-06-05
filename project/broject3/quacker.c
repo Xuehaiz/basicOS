@@ -191,7 +191,7 @@ int subParse(char *filename) {
 					lastEntry[index] = entryNum;
 					break;
 				}
-				usleep(500);
+				usleep(5000);
 			}
 			if (!entryNum) {
 				fprintf(stderr, "Error! Subscriber <%ld> failed to get entry from topic ID: <%d>\n", pthread_self(), topicID);
