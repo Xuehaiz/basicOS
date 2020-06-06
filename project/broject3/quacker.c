@@ -266,7 +266,7 @@ int destroyLock() {
 	return 1;
 }
 
-void initHTML(FILE *htmlptr, char *fname) {
+int initHTML(FILE *htmlptr, char *fname) {
     fputs("<!DOCTYPE html>\n<html>\n<head>\n<title>HTML_SUBSCRIBER_FILENAME</title>\n\n", htmlptr);
     fputs("<style>\ntable, th, td {\n  border: 1px solid black;\n  ", htmlptr);
     fputs("border-collapse: collapse;\n}\nth, td {\n  padding: 5px;\n}\n", htmlptr);
@@ -274,10 +274,10 @@ void initHTML(FILE *htmlptr, char *fname) {
     fputs("<h1>Subscriber: ", htmlptr);
     fputs(fname, htmlptr);
     fputs(" </h1>\n", htmlptr); 
-    return NULL;
+    return 1;
 }
 
-void addHTML(FILE *htmlptr, char *topicName, char* caption, char *url) {
+int addHTML(FILE *htmlptr, char *topicName, char* caption, char *url) {
 	fputs("\n<h2>Topic Name: ", htmlptr);
     fputs(topicName, htmlptr);
     fputs("</h2>\n\n",htmlptr) 
@@ -289,12 +289,12 @@ void addHTML(FILE *htmlptr, char *topicName, char* caption, char *url) {
     fputs(url, htmlptr);
     fputs("</td>\n  </tr>\n", htmlptr);
     fputs("</table>\n\n", htmlptr);
-    return NULL;
+    return 1;
 }
 
-void endHTML(FILE *htmlptr) {
+int endHTML(FILE *htmlptr) {
 	fputs("</body>\n</html>\n", htmlptr);
-	return NULL;
+	return 1;
 }
 
 int main(int argc __attribute__((unused)), char const *argv[])

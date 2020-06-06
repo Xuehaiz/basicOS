@@ -47,10 +47,10 @@ void *clean(void *voidPool);
 
 int destroyLock();
 
-void initHTML(FILE *htmlptr, char *fname);
+int initHTML(FILE *htmlptr, char *fname);
 
-void addHTML(FILE *htmlptr, char *topicName, char* caption, char *url);
+int addHTML(FILE *htmlptr, char *topicName, char* caption, char *url);
 
-void endHTML(FILE *htmlptr);
+int endHTML(FILE *htmlptr);
 
 #endif
