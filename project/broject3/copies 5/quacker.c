@@ -139,18 +139,6 @@ int subParse(char *filename) {
 	int entryNum = 0;
 	topicEntry myEntry;
 
-	// HTML handling
-	char htmlfile[FILENAME_MAX];
-	char fname_cp[FILENAME_MAX];
-	strcpy(fname_cp, fsub);
-	token = strtok(fname_cp, ".");
-	printf("fsub: %s\n", fsub);
-	strcpy(htmlfile, token);
-	strcat(htmlfile, ".html");
-
-	FILE *htmlptr = fopen(htmlfile, "w+");
-	initHTML(htmlptr, fsub);
-
 	int lastEntry[TS.numTopics];
 	for (int i = 0; i < TS.numTopics; i++) {
 		lastEntry[i] = 0;
@@ -193,7 +181,6 @@ int subParse(char *filename) {
 				if (entryNum == 1) {
 					printf("Subscriber <%ld> got entry <%d> from topic ID <%d>\n", pthread_self(), myEntry.entryNum, topicID);
 					printf("URL: <%s> Caption: <%s>\n", myEntry.photoURL, myEntry.photoCaption);
-					addHTML(htmlptr, TS.topics[index].name, myEntry.photoCaption, myEntry.photoURL);
 					lastEntry[index]++;
 					break;
 				}
@@ -216,7 +203,6 @@ int subParse(char *filename) {
 		sched_yield();
 	}
 	free(line);
-	endHTML(htmlptr);
 	return 1;
 }
 
@@ -272,28 +258,21 @@ void initHTML(FILE *htmlptr, char *fname) {
     fputs("th {\n  text-align: left;\n}\n</style>\n\n</head>\n<body>\n\n", htmlptr);
     fputs("<h1>Subscriber: ", htmlptr);
     fputs(fname, htmlptr);
-    fputs(" </h1>\n", htmlptr); 
+    fputs(" </h1>\n<table style=\"width:100%%\" align=\"middle\">\n", htmlptr);
+    fputs("  <tr>\n\t<th>CAPTION</th>\n\t<th>PHOTO-URL</th>\n  </tr>\n", htmlptr);
     return NULL;
 }
 
 void addHTML(FILE *htmlptr, char *topicName, char* caption, char *url) {
-	fputs("\n<h2>Topic Name: ", htmlptr);
-    fputs(topicName, htmlptr);
-    fputs("</h2>\n\n",htmlptr) 
-	fputs("<table style=\"width:100%\" align=\"middle\">\n", htmlptr);
-    fputs("  <tr>\n\t<th>CAPTION</th>\n\t<th>PHOTO-URL</th>\n  </tr>\n", htmlptr);
     fputs("  <tr>\n\t<td>", htmlptr);
+    fputs(topicName, htmlptr);
+    fputs("</td>\n    <td>", htmlptr);
     fputs(caption, htmlptr);
-    fputs("</td>\n\t<td>", htmlptr);
+    fputs("</td>\n    <td>", htmlptr);
     fputs(url, htmlptr);
     fputs("</td>\n  </tr>\n", htmlptr);
-    fputs("</table>\n\n", htmlptr);
-    return NULL;
-}
 
-void endHTML(FILE *htmlptr) {
-	fputs("</body>\n</html>\n", htmlptr);
-	return NULL;
+    return;
 }
 
 int main(int argc __attribute__((unused)), char const *argv[])

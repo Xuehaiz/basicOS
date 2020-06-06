@@ -47,10 +47,4 @@ void *clean(void *voidPool);
 
 int destroyLock();
 
-void initHTML(FILE *htmlptr, char *fname);
-
-void addHTML(FILE *htmlptr, char *topicName, char* caption, char *url);
-
-void endHTML(FILE *htmlptr);
-
 #endif
