@@ -141,15 +141,15 @@ int subParse(char *filename) {
 
 	// HTML handling
 	char htmlfile[FILENAME_MAX];
-	char fname_cp[FILENAME_MAX];
-	strcpy(fname_cp, fsub);
+	char *fname_cp = (char *)malloc(strlen(filename) + 1);
+	strcpy(fname_cp, filename);
 	token = strtok(fname_cp, ".");
-	printf("fsub: %s\n", fsub);
+	printf("fsub: %s\n", filename);
 	strcpy(htmlfile, token);
 	strcat(htmlfile, ".html");
 
 	FILE *htmlptr = fopen(htmlfile, "w+");
-	initHTML(htmlptr, fsub);
+	initHTML(htmlptr, filename);
 
 	int lastEntry[TS.numTopics];
 	for (int i = 0; i < TS.numTopics; i++) {
@@ -216,6 +216,7 @@ int subParse(char *filename) {
 		sched_yield();
 	}
 	free(line);
+	free(fname_cp);
 	endHTML(htmlptr);
 	return 1;
 }
