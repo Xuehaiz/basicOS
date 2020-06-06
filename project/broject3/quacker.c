@@ -280,7 +280,7 @@ int initHTML(FILE *htmlptr, char *fname) {
 int addHTML(FILE *htmlptr, char *topicName, char* caption, char *url) {
 	fputs("\n<h2>Topic Name: ", htmlptr);
     fputs(topicName, htmlptr);
-    fputs("</h2>\n\n",htmlptr) 
+    fputs("</h2>\n\n",htmlptr);
 	fputs("<table style=\"width:100%\" align=\"middle\">\n", htmlptr);
     fputs("  <tr>\n\t<th>CAPTION</th>\n\t<th>PHOTO-URL</th>\n  </tr>\n", htmlptr);
     fputs("  <tr>\n\t<td>", htmlptr);
