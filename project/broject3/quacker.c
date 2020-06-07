@@ -404,7 +404,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
 				}
 				strcpy(pubPool[pub_idx].filename, arg_arr[2]);
 				pubPool[pub_idx].thread_idx = pub_idx;
-				pthread_create(&pubPool[pub_idx].thread, NULL, &publisher, (void *) &pubPool[pub_idx]);
+				pthread_attr_init(&attr);
+				pthread_create(&pubPool[pub_idx].thread, &attr, &publisher, (void *) &pubPool[pub_idx]);
 				printf("Publisher <%d> to be read from <%s> added!\n", pubFileCtr, arg_arr[2]);
 			}
 			else if (strcmp(arg_arr[1], "subscriber") == 0 && subFileCtr <= MAXSUBS) {
@@ -424,7 +425,8 @@ int main(int argc __attribute__((unused)), char const *argv[])
 				}
 				strcpy(subPool[sub_idx].filename, arg_arr[2]);
 				subPool[pub_idx].thread_idx = sub_idx;
-				pthread_create(&subPool[sub_idx].thread, NULL, &subscriber, (void *) &subPool[sub_idx]);
+				pthread_attr_init(&attr);
+				pthread_create(&subPool[sub_idx].thread, &attr, &subscriber, (void *) &subPool[sub_idx]);
 				printf("Subscriber <%d> to be read from <%s> added!\n", subFileCtr, arg_arr[2]);
 			}
 			else {

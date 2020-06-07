@@ -341,6 +341,7 @@ int main(int argc, char const *argv[])
 	int sub_idx = 0;
 	int pub_count = 0;
 	int sub_count = 0;
+	pthread_attr_t attr;
 
 	// initialize pools 
 	for (int i = 0; i < NUMPROXIES; i++) {
