@@ -327,6 +327,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	int topicID;
 	int queueLen;
 	int delta_t;
+	pthread_attr_t attr;
 
 	TS.numTopics = 0;
 	
