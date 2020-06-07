@@ -144,7 +144,6 @@ int subParse(char *filename) {
 	char *fname_cp = (char *)malloc(strlen(filename) + 1);
 	strcpy(fname_cp, filename);
 	token = strtok(fname_cp, ".");
-	printf("fsub: %s\n", filename);
 	strcpy(htmlfile, token);
 	strcat(htmlfile, ".html");
 
@@ -200,6 +199,7 @@ int subParse(char *filename) {
 				else if (entryNum > 1) {
 					printf("Subscriber <%ld> got entry <%d> from topic ID <%d>\n", pthread_self(), myEntry.entryNum, topicID);
 					printf("URL: <%s> Caption: <%s>\n", myEntry.photoURL, myEntry.photoCaption);
+					addHTML(htmlptr, TS.topics[index].name, myEntry.photoCaption, myEntry.photoURL);
 					lastEntry[index] = entryNum;
 					break;
 				}
@@ -398,7 +398,6 @@ int main(int argc __attribute__((unused)), char const *argv[])
 						pub_idx = iter;
 						break;
 					}
-
 					iter++;
 					usleep(100000);
 				}
@@ -451,15 +450,19 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	pthread_t cleanThread;
 	pthread_create(&cleanThread, NULL, &clean, (void *) &delta_t);
 
-	for (int i = 0; i < pubFileCtr; i++) {
-		if (pthread_join(pubPool[i].thread, NULL)) {
-			fprintf(stderr, "Error! Thread pubPool[%d] join failed\n", i);
+	for (int i = 0; i < NUMPROXIES; i++) {
+		if (!pubPool[i].isFree) {
+			if (pthread_join(pubPool[i].thread, NULL)) {
+				fprintf(stderr, "Error! Thread pubPool[%d] join failed\n", i);
+			}
 		}
 	}
 	
-	for (int i = 0; i < subFileCtr; i++) {
-		if (pthread_join(subPool[i].thread, NULL)) {
-			fprintf(stderr, "Error! Thread subPool[%d] join failed\n", i);
+	for (int i = 0; i < NUMPROXIES; i++) {
+		if (!subPool[i].isFree) {
+			if (pthread_join(subPool[i].thread, NULL)) {
+				fprintf(stderr, "Error! Thread subPool[%d] join failed\n", i);
+			}
 		}
 	}
 
