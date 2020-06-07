@@ -455,18 +455,14 @@ int main(int argc __attribute__((unused)), char const *argv[])
 	pthread_create(&cleanThread, NULL, &clean, (void *) &delta_t);
 
 	for (int i = 0; i < NUMPROXIES; i++) {
-		if (!pubPool[i].isFree) {
-			if (pthread_join(pubPool[i].thread, NULL)) {
-				fprintf(stderr, "Error! Thread pubPool[%d] join failed\n", i);
-			}
-		}
+		if (pthread_join(pubPool[i].thread, NULL)) {
+			fprintf(stderr, "Error! Thread pubPool[%d] join failed\n", i);
+		}		
 	}
 	
-	for (int i = 0; i < NUMPROXIES; i++) {
-		if (!subPool[i].isFree) {
-			if (pthread_join(subPool[i].thread, NULL)) {
-				fprintf(stderr, "Error! Thread subPool[%d] join failed\n", i);
-			}
+	for (int i = 0; i < NUMPROXIES; i++) {	
+		if (pthread_join(subPool[i].thread, NULL)) {
+			fprintf(stderr, "Error! Thread subPool[%d] join failed\n", i);
 		}
 	}
 
