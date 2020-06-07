@@ -218,6 +218,7 @@ int subParse(char *filename) {
 	free(line);
 	free(fname_cp);
 	endHTML(htmlptr);
+	fclose(htmlptr);
 	return 1;
 }
 
