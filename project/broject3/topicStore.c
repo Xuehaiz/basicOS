@@ -6,7 +6,7 @@
  *     CIS 415 Project 3 InstaQuack Part 1 source file
  *
  * Notes:
- *     N/A
+ *     getEntry credit to Joseph Goh
  *===========================================================================*/
 
 #include <stdio.h>
