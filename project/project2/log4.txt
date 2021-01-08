@@ -1,0 +1,118 @@
+==7490== Memcheck, a memory error detector
+==7490== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==7490== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==7490== Command: ./part4 input.txt
+==7490== 
+total 340
+24 Report_Collection_Template.docx
+ 8 partgg.c
+20 part4.o
+ 8 part4f.c
+ 8 part4.c
+20 part4
+ 8 part3was_ok.c
+20 part3.o
+ 8 part3mm.c
+ 8 part3kk.c
+ 8 part3.c
+20 part3
+16 part2.o
+ 8 part2.c
+20 part2
+12 part1.o
+ 4 part1 copy.c
+ 4 part1.c
+20 part1
+ 4 par2_1.c
+ 4 Makefile
+ 4 log4.txt
+ 8 log3.txt
+ 4 log2.txt
+ 4 log1.txt
+ 8 iobound.o
+ 4 iobound.c
+12 iobound
+ 4 input.txt
+12 .DS_Store
+ 4 draft
+ 4 cpubound.c
+12 cpubound
+ 4 ..
+ 4 .
+==7493== 
+==7493== HEAP SUMMARY:
+==7493==     in use at exit: 0 bytes in 0 blocks
+==7493==   total heap usage: 4 allocs, 4 frees, 7,720 bytes allocated
+==7493== 
+==7493== All heap blocks were freed -- no leaks are possible
+==7493== 
+==7493== For counts of detected and suppressed errors, rerun with: -v
+==7493== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+	memcheck-amd64- 	T (stopped)   	7492   	7490   
+	memcheck-amd64- 	T (stopped)   	7493   	7490   
+	memcheck-amd64- 	T (stopped)   	7494   	7490   
+	memcheck-amd64- 	T (stopped)   	7495   	7490   
+	sleep 	R (running)   	7492   	7490   
+	memcheck-amd64- 	T (stopped)   	7493   	7490   
+	memcheck-amd64- 	T (stopped)   	7494   	7490   
+	memcheck-amd64- 	T (stopped)   	7495   	7490   
+	sleep 	T (stopped)   	7492   	7490   
+	memcheck-amd64- 	T (stopped)   	7494   	7490   
+	memcheck-amd64- 	T (stopped)   	7495   	7490   
+	sleep 	T (stopped)   	7492   	7490   
+	iobound 	R (running)   	7494   	7490   
+	memcheck-amd64- 	T (stopped)   	7495   	7490   
+	sleep 	T (stopped)   	7492   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	sleep 	T (stopped)   	7492   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	T (stopped)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	T (stopped)   	7495   	7490   
+	iobound 	R (running)   	7494   	7490   
+	cpubound 	T (stopped)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	R (running)   	7494   	7490   
+	cpubound 	T (stopped)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	R (running)   	7494   	7490   
+	cpubound 	T (stopped)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+	cpubound 	R (running)   	7495   	7490   
+	iobound 	R (running)   	7494   	7490   
+	cpubound 	T (stopped)   	7495   	7490   
+	iobound 	T (stopped)   	7494   	7490   
+All processes finished: parent exiting: my pid is 7490 
+
+==7490== 
+==7490== HEAP SUMMARY:
+==7490==     in use at exit: 0 bytes in 0 blocks
+==7490==   total heap usage: 176 allocs, 176 frees, 218,384 bytes allocated
+==7490== 
+==7490== All heap blocks were freed -- no leaks are possible
+==7490== 
+==7490== For counts of detected and suppressed errors, rerun with: -v
+==7490== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

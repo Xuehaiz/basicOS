@@ -1,0 +1,7 @@
+put 2 "https://www.newdoggy.com/wp-content/uploads/2019/04/nia-female-german-shepherd-puppy-for-sale-8-768x979.jpg" "GermanShepherd"
+sleep 300
+put 1 "https://www.mercurynews.com/wp-content/uploads/2017/10/sjm-l-bachelor-1022-03.jpg?w=620" "MountBachelor"
+sleep 500
+put 3 "https://dbukjj6eu5tsf.cloudfront.net/sidearm.sites/uoregon.sidearmsports.com/images/2016/7/21/Mariota_Washington2014_EE.JPG" "Mariota,goat"
+sleep 600
+stop
