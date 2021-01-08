@@ -1,3 +1,0 @@
-put 12 http://www.baidu.com www.www.www.www.baidu
-sleep 1500
-stop

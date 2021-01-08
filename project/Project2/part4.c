@@ -173,7 +173,7 @@ int main(int argc __attribute__((unused)), char const *argv[])
                 if (sigwait(&sigset, &signal) == 0) {
                     //printf("Child process: %d - Received signal: SIGALRM\n", pid[k]);
                 }
-                if (waitpid(pid[k], &status, WNOHANG)) {
+                if (WIFEXITED(status)) {
                     kill(pid[k], SIGSTOP);
                     //printf("Parent PID %d suspended unfinished child PID %d\n", getpid(), pid[k]);
                     condition = 1; 

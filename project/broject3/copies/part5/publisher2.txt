@@ -1,3 +1,0 @@
-put 12 http://www.taobao.com www.www.www.www.taobao
-sleep 1500
-stop

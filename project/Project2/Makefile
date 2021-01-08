@@ -18,12 +18,6 @@ part3: part3.o
 part4: part4.o
 	$(CC) $(CFLAGS) -o part4 part4.o
 
-iobound: iobound.o
-	$(CC) $(CFLAGS) -o iobound iobound.o
-
-cpubound.o: cpubound.c
-	$(CC) $(CFLAGS) -o cpubound cpubound.o
-
 part1.o: part1.c
 
 part2.o: part2.c
